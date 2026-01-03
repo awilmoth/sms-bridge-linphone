@@ -6,11 +6,13 @@
 # Use bridge as proxy for VoIP.ms API
 api_url = https://bridge.your-domain.com:5000/voipms/api
 
-# Your actual VoIP.ms credentials
+# Credentials for VoIP provider (SMS/MMS works with any values)
+# For SMS/MMS only: use placeholder values below
+# For voice calls: update with your actual VoIP provider credentials
 username = your_email@example.com
-password = your_voipms_password
+password = your_password
 
-# Your VoIP.ms DID (for caller ID)
+# Your VoIP provider DID (optional, needed only for voice calls)
 did = 15551234567
 
 # Flexisip SIP server configuration

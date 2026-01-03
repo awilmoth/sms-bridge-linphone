@@ -167,24 +167,26 @@ docker-compose logs -f
 
 ## Phase 3: Configure mmsgate
 
-**Why:** mmsgate was automatically built and deployed in Phase 2. Now configure it for your VoIP.ms account.
+**Why:** Optional - SMS/MMS works immediately with placeholder credentials. Only needed if you want voice calls.
 
-### Edit mmsgate.conf
+### Edit mmsgate.conf (Optional for Voice Calls)
 
 ```bash
 cd bridge-server/
 nano mmsgate.conf
 ```
 
-Copy from [../configs/mmsgate.conf.example](../configs/mmsgate.conf.example):
+**For SMS/MMS only:** Use placeholder values from [../configs/mmsgate.conf.example](../configs/mmsgate.conf.example)
+
+**For voice calls:** Update with your actual VoIP provider credentials:
 
 ```ini
 [voipms]
 # CRITICAL: Point to bridge, not real VoIP.ms!
 api_url = https://bridge.your-domain.com:5000/voipms/api
-username = your_voipms_username  # Same as Linphone login
-password = your_voipms_password  # Same as Linphone login  
-did = 15551234567  # Your VoIP.ms number (for call forwarding)
+username = your_email@example.com        # Your VoIP provider account
+password = your_password                  # Your VoIP provider password
+did = 15551234567                         # Your VoIP provider DID (for calls)
 
 [server]
 listen = 0.0.0.0
@@ -193,7 +195,7 @@ cert_file = /etc/mmsgate/certs/fullchain.pem
 key_file = /etc/mmsgate/certs/privkey.pem
 ```
 
-### Restart mmsgate
+### Restart mmsgate (Only if you edited the config)
 
 ```bash
 cd bridge-server/
@@ -203,7 +205,9 @@ docker-compose restart mmsgate
 docker-compose logs -f mmsgate
 ```
 
-### Configure VoIP.ms Webhook
+### Configure VoIP Provider Webhook (Only for Voice Calls)
+
+If using voice calls with VoIP.ms:
 
 1. Login to https://voip.ms
 2. DID Numbers → Manage DIDs → Select your DID
@@ -214,11 +218,11 @@ docker-compose logs -f mmsgate
    - Method: POST
 4. Save
 
-**✓ Checkpoint:** mmsgate configured and VoIP.ms webhook pointing to bridge
+**✓ Checkpoint:** SMS/MMS works! (Optional: VoIP.ms webhook configured for voice)
 
-## Phase 4: Setup Linphone
+## Phase 4: Setup Linphone (Optional for Voice Calls)
 
-**Why:** Your SIP client - handles both calls and messages.
+**Why:** Your SIP client - handles both calls and messages. SMS/MMS work without this step.
 
 ### Install Linphone
 

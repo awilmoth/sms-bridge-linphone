@@ -158,21 +158,24 @@ cd bridge-server/
 # - Starts all services
 ```
 
-**Phase 3: Configure Services** *(optional for voice calls)*
+**Phase 3: Configure mmsgate** *(SMS/MMS works without this step)*
 ```bash
 cd bridge-server/
-nano mmsgate.conf  # Add your VoIP provider credentials (if using voice)
+
+# SMS/MMS works immediately with placeholder credentials
+# For voice calls, add your VoIP provider credentials:
+nano mmsgate.conf  # Update username/password with your provider account
+nano flexisip.conf # Update domain settings if needed
+
 docker-compose restart mmsgate
-# Note: SMS/MMS works immediately without this step
-# Voice calls require: provider setup + cellular number forwarding
 ```
 
 **Phase 4: Setup Linphone** *(optional for voice calls)*
 ```bash
 # Install Linphone app on your device
-# Add SIP account (your provider's credentials)
-# Configure your cellular provider to forward calls to your VoIP DID
-# Test SMS/MMS (works without SIP account or call forwarding)
+# Add SIP account with your provider's credentials
+# Configure cellular number forwarding (if using voice calls)
+# Test SMS/MMS (works without SIP account)
 ```
 
 ### Technology Stack
