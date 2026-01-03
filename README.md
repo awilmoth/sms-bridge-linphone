@@ -14,6 +14,38 @@ This system creates a secure bridge between an Android phone with a SIM card (th
 - ✅ **Provider-agnostic** - use any SIP provider that supports number forwarding (or none)
 - ✅ **Health monitoring** - automatic SMTP alerts when services go down
 
+### Real-World Use Cases
+
+**🌍 Traveling Abroad with Your Native SIM**
+- Keep using SMS/MMS from your home country SIM while traveling anywhere in the world
+- No need to buy local SIM cards in each country or pay expensive roaming charges
+- Receive 2FA codes, banking notifications, and SMS from home services anywhere
+- Your real cellular number stays active and reachable without carrier roaming
+
+**📱 Reduce Phone Dependency**
+- Leave your Android phone at home plugged in (no battery drain, no pocket burden)
+- Use Linphone on any device: laptop, tablet, desktop, or secondary phone
+- Perfect for business travel or digital nomads who want a lightweight setup
+- No need to carry multiple devices for messaging
+
+**🔒 Privacy & Security**
+- Messages stay within your control (self-hosted bridge server)
+- No third-party SIM provider or gateway reading your messages
+- Encrypt communications end-to-end with your SIP provider choice
+- Your messaging isn't dependent on any commercial SMS aggregator
+
+**💰 Cost Efficiency**
+- Eliminate roaming charges while traveling (only need data, not cellular coverage)
+- One SIM card, unlimited messaging from anywhere with internet
+- Avoid expensive international SMS plans
+- Works with prepaid SIMs - no monthly commitments needed
+
+**🛡️ Reliability & Carrier Grade**
+- Uses actual cellular network for SMS/MMS (not web gateways or VoIP SMS)
+- Works with shortcodes (banking 2FA, OTP codes, notifications)
+- Carrier-grade reliability - not dependent on any startup or commercial service
+- Your SIM card is the source of truth, not a third-party API
+
 ## Architecture
 
 ```
