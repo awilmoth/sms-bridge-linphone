@@ -1,27 +1,19 @@
-# SMS/MMS Bridge: Linphone Complete Solution
+# SMS/MMS Bridge with Linphone
 
-**Everything in one app: Calls, SMS, and MMS via Linphone using your real cellular number**
+**Route SMS/MMS from an Android phone with cellular service through a bridge server to Linphone**
 
 ## Project Overview
 
-This project enables you to use Linphone as your complete communications app while traveling, with full SMS/MMS capabilities using your actual cellular number. Your Android phone stays at home with your SIM card, and all messages route through a bridge server to Linphone wherever you are.
+This system creates a secure bridge between an Android phone with a SIM card (the messaging device) and a Linphone client (the messaging app). SMS/MMS messages route through a bridge server on a VPS, allowing you to send and receive SMS/MMS from Linphone using your actual cellular number.
 
 ### What You Get
 
-- ✅ **SMS** (bidirectional) via your cellular number in Linphone
-- ✅ **MMS with photos** (bidirectional) via your cellular number in Linphone
-- ✅ **Voice calls** (optional) via your chosen VoIP provider
-- ✅ **Real cellular number** - SMS/MMS recipients see your actual number
-- ✅ **Single app** - everything in Linphone
-- ✅ **Works globally** - travel anywhere with internet access
-- ✅ **Provider-agnostic** - use any SIP/VoIP provider (or none)
-
-### Perfect For
-
-- 🌍 Digital nomads and frequent travelers
-- 🏦 Banking 2FA codes while abroad
-- 📱 Maintaining your US/home number internationally
-- 💼 Professional communications on the go
+- ✅ **SMS** (bidirectional) via cellular in Linphone
+- ✅ **MMS with photos** (bidirectional) via cellular in Linphone
+- ✅ **Voice calls** (optional) via any SIP/VoIP provider
+- ✅ **Real cellular number** - recipients see your actual number
+- ✅ **Single unified app** - everything in Linphone
+- ✅ **Provider-agnostic** - use any SIP provider (or none)
 
 ## Architecture
 
@@ -47,36 +39,38 @@ This project enables you to use Linphone as your complete communications app whi
                     └────────┬────────┘
                              │
                     ┌────────▼────────┐
-                    │ Android (Home)  │
+                    │ Android Phone   │
+                    │  (with SIM)     │
                     │  10.0.0.2 (VPN) │
-                    │ Behind NAT/FW   │
+                    │                 │
+                    │ Messaging Device│
                     └─────────────────┘
 
-OUTGOING (You → Someone):
-  You (Linphone)
+OUTGOING (Linphone user → Recipient):
+  Linphone app
     ↓ SIP MESSAGE
-  mmsgate (calls "VoIP.ms API" at bridge)
+  mmsgate (SIP messaging handler)
     ↓ HTTP to bridge:5000/voipms/api
-  Bridge (intercepts, routes via WireGuard VPN)
-    ↓ HTTP to 10.0.0.2:8080
-  Fossify Messages (Android at home)
-    ↓ Cellular
-  Recipient (sees YOUR cellular number)
+  Bridge (message router, via WireGuard VPN)
+    ↓ HTTPS to 10.0.0.2:8080
+  Fossify Messages (Android phone)
+    ↓ Cellular network
+  Recipient (sees your real cellular number)
 
-INCOMING (Someone → You):
+INCOMING (Someone → Your cellular number):
   Sender → Your cellular number
-    ↓ Cellular
-  Fossify Messages (Android at home)
+    ↓ Cellular network
+  Fossify Messages (Android phone)
     ↓ Webhook via WireGuard to bridge:5000/webhook/fossify
-  Bridge
+  Bridge (receives and routes)
     ↓ Webhook to mmsgate
-  mmsgate
+  mmsgate (SIP messaging)
     ↓ SIP MESSAGE
-  Linphone (You)
+  Linphone app (receives notification)
 
-CALLS:
-  Inbound: Cellular → *72 Forward → VoIP.ms → Linphone
-  Outbound: Linphone → VoIP.ms (with cellular caller ID) → PSTN
+CALLS (Optional, any SIP provider):
+  Inbound: Cellular → Provider → Linphone (via SIP)
+  Outbound: Linphone → Provider → PSTN
 ```
 
 ## Key Innovation
@@ -126,12 +120,11 @@ sms-bridge-linphone/
 
 ### Prerequisites
 
-- **Android phone** with SIM card (stays at home, plugged in)
-- **VPS** with 2GB RAM, public IP (Ubuntu 22.04 recommended)
-- **Domain name** with DNS configured (for HTTPS/reverse proxy)
-- **WireGuard VPN** setup (included in scripts)
-- *Optional:* **VoIP account** (for voice calls; any provider that supports SIP call forwarding)
-- **Docker & docker-compose** (installed automatically by script)
+- **Android phone** with active cellular SIM card
+- **VPS/Server** with public IP and domain (2GB RAM minimum)
+- **Docker & docker-compose**
+- **WireGuard** (automated setup included)
+- *Optional:* **SIP/VoIP account** (for voice calls; any provider with SIP support)
 
 ### 4-Phase Deployment
 
@@ -328,55 +321,31 @@ Everything in Linphone:
 - **mmsgate:** HTTPS with authentication
 - **Flexisip:** TLS SIP only
 
-## Costs
+## Features
 
-### One-Time
-- **Android phone:** $0 (use existing old phone)
+### Full MMS Support
 
-### Monthly
-- **VPS:** $1.50/month
-- **Cellular SIM + plan:** $8.00/month
-- *Optional:* **VoIP provider DID:** $0.85/month (VoIP.ms) or your choice
-- **Domain:** Free (already own)
-- **SSL:** $0 (Let's Encrypt)
-- **WireGuard VPN:** $0 (open source)
+Unlike many SMS gateways, this system uses **native Android MMS APIs**:
+- ✅ Send photos via MMS
+- ✅ Receive photos via MMS
+- ✅ Multiple attachments
+- ✅ Video messages
 
-**Minimum: ~$9.50/month (SMS/MMS only)**  
-**With voice: ~$10.35/month** (if using VoIP.ms)
+### Real Cellular Number
 
-Compare to:
-- International roaming: $50-100/month
-- Separate VoIP number: Doesn't work for banking
-- Google Fi: $70-80/month for international
+All SMS/MMS use the actual cellular number:
+- ✅ Legitimate cellular number for banking
+- ✅ Works with shortcodes (2FA, OTP)
+- ✅ Carrier-grade reliability
+- ✅ No VoIP numbers for messaging
 
-## Advantages Over Alternatives
+### Flexible Architecture
 
-### vs Android SMS Gateway + Telegram
-
-| Feature          | Android SMS Gateway | This Solution      |
-| ---------------- | ------------------- | ------------------ |
-| MMS sending      | ❌ No                | ✅ Yes              |
-| Interface        | Telegram (separate) | Linphone (unified) |
-| Calls + messages | 2 apps              | 1 app              |
-| Code control     | Limited             | Full               |
-
-### vs VoIP.ms SMS Only
-
-| Feature              | VoIP.ms SMS | This Solution             |
-| -------------------- | ----------- | ------------------------- |
-| Real cellular number | ❌ No        | ✅ Yes (via WireGuard VPN) |
-| Banking compatible   | ⚠️ Sometimes | ✅ Always                  |
-| Shortcodes (2FA)     | ❌ No        | ✅ Yes                     |
-| Carrier-grade        | ❌ No        | ✅ Yes                     |
-| Phone at home        | ❌ N/A       | ✅ Connected via VPN       |
-
-### vs Dual SIM + International Plan
-
-| Feature          | International Plan | This Solution        |
-| ---------------- | ------------------ | -------------------- |
-| Monthly cost     | $50-100            | $27-37               |
-| Works everywhere | ⚠️ Some countries   | ✅ With internet      |
-| Battery drain    | High               | None (phone at home) |
+SMS/MMS flow is independent of voice/VoIP:
+- ✅ Works with **any SIP provider** (Twilio, Vonage, Asterisk, VoIP.ms, etc.)
+- ✅ Works **without any voice calling** (SMS/MMS only)
+- ✅ Easy to switch providers - no code changes needed
+- ✅ Use Linphone as unified SIP client for any provider
 
 ## Contributing
 
@@ -399,7 +368,7 @@ This is a personal project, but improvements welcome:
 - **Fossify Messages:** https://github.com/FossifyOrg/Messages
 - **mmsgate:** https://github.com/RVgo4it/mmsgate
 - **Flexisip:** https://github.com/BelledonneCommunications/flexisip
-- **VoIP.ms:** https://voip.ms
+- **Linphone:** https://linphone.org
 
 ## Support
 
