@@ -135,40 +135,38 @@ echo "VPS public IP: $PUBLIC_IP"
 # Step 3: Configure WireGuard Server on VPS
 echo
 echo "[3/7] Configuring WireGuard server..."
-ssh_cmd "bash -c "\"
-if [ -f /etc/wireguard/wg0.conf ]; then
-    echo \"✓ Server config already exists\"
-else
-    sudo tee /etc/wireguard/wg0.conf > /dev/null <<'WGEOF'
+
+# Create WireGuard config and send to VPS
+cat > /tmp/wg0.conf <<'WGEOF'
 [Interface]
 Address = 10.0.0.1/24
 ListenPort = 51820
-PrivateKey = $SERVER_PRIVATE
+PrivateKey = PLACEHOLDER_SERVER_PRIVATE
 
 PostUp = iptables -A FORWARD -i wg0 -j ACCEPT
 PostDown = iptables -D FORWARD -i wg0 -j ACCEPT
 
 [Peer]
-PublicKey = $CLIENT_PUBLIC
+PublicKey = PLACEHOLDER_CLIENT_PUBLIC
 AllowedIPs = 10.0.0.2/32
 PersistentKeepalive = 25
 WGEOF
-    sudo chmod 600 /etc/wireguard/wg0.conf
-    echo \"✓ Server configured\"
-fi
 
-# Enable IP forwarding
-sudo sysctl -w net.ipv4.ip_forward=1 > /dev/null
-if ! grep -q \"net.ipv4.ip_forward=1\" /etc/sysctl.conf; then
-    echo \"net.ipv4.ip_forward=1\" | sudo tee -a /etc/sysctl.conf > /dev/null
-fi
+# Replace placeholders with actual keys
+sed -i "s|PLACEHOLDER_SERVER_PRIVATE|$SERVER_PRIVATE|g" /tmp/wg0.conf
+sed -i "s|PLACEHOLDER_CLIENT_PUBLIC|$CLIENT_PUBLIC|g" /tmp/wg0.conf
 
-# Start WireGuard
-echo \"Starting WireGuard...\"
-sudo systemctl enable wg-quick@wg0 > /dev/null 2>&1
-sudo systemctl start wg-quick@wg0
-echo \"✓ WireGuard started\"
-"\""'
+# Send config to VPS
+scp_cmd /tmp/wg0.conf "$VPS_USER@$VPS_HOST:/tmp/wg0.conf"
+
+# Configure on VPS
+ssh_cmd 'if [ -f /etc/wireguard/wg0.conf ]; then echo "✓ Server config already exists"; else sudo mv /tmp/wg0.conf /etc/wireguard/wg0.conf && sudo chmod 600 /etc/wireguard/wg0.conf && echo "✓ Server configured"; fi'
+
+# Enable IP forwarding and start WireGuard
+ssh_cmd 'sudo sysctl -w net.ipv4.ip_forward=1 > /dev/null && grep -q "net.ipv4.ip_forward=1" /etc/sysctl.conf || echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf > /dev/null && sudo systemctl enable wg-quick@wg0 > /dev/null 2>&1 && sudo systemctl start wg-quick@wg0 && echo "✓ WireGuard started"'
+
+# Cleanup
+rm -f /tmp/wg0.conf
 
 # Step 4: Generate Android Config locally
 echo
