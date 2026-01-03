@@ -56,10 +56,25 @@ if [ "$AUTH_METHOD" = "2" ]; then
         sshpass -p "$VPS_PASS" scp -o StrictHostKeyChecking=no "$@"
     }
 else
-    # Use SSH keys
-    SSH_KEY="$HOME/.ssh/id_ed25519"
-    if [ ! -f "$SSH_KEY" ]; then
-        echo "Error: SSH private key not found at $SSH_KEY"
+    # Use SSH keys - try to find the key in common locations
+    SSH_KEY=""
+    
+    # Try multiple paths for the SSH key
+    for key_path in "$HOME/.ssh/id_ed25519" "$HOME/.ssh/id_ed25519" ~/.ssh/id_ed25519; do
+        # Expand tilde manually if needed
+        expanded_path="${key_path/#\~/$HOME}"
+        if [ -f "$expanded_path" ]; then
+            SSH_KEY="$expanded_path"
+            break
+        fi
+    done
+    
+    if [ -z "$SSH_KEY" ] || [ ! -f "$SSH_KEY" ]; then
+        echo "Error: SSH private key not found at ~/.ssh/id_ed25519"
+        echo "Checked paths:"
+        echo "  - $HOME/.ssh/id_ed25519"
+        echo "  - ~/.ssh/id_ed25519"
+        echo ""
         echo "Generate one with: ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519"
         exit 1
     fi
