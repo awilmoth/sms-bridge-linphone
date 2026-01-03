@@ -276,6 +276,10 @@ else
 fi
 '
 
+# Clone repository to VPS if not already present
+echo "Cloning repository to VPS..."
+ssh_cmd 'if [ ! -d sms-bridge-linphone ]; then git clone https://github.com/awilmoth/sms-bridge-linphone.git && echo "✓ Repository cloned"; else echo "✓ Repository already present"; fi'
+
 # Generate and send .env to VPS
 echo "Generating bridge configuration..."
 
@@ -308,14 +312,11 @@ SMTP_TO=
 
 # Send .env to VPS
 echo "Sending configuration to VPS..."
-echo "$ENV_CONTENT" | ssh_cmd 'cat > /tmp/.env.tmp && (cd bridge-server && [ ! -f .env ] && mv /tmp/.env.tmp .env || rm /tmp/.env.tmp)'
+echo "$ENV_CONTENT" | ssh_cmd 'cat > /tmp/.env.tmp && cd sms-bridge-linphone/bridge-server && ([ ! -f .env ] && mv /tmp/.env.tmp .env || rm /tmp/.env.tmp)'
 
 # Start bridge server
 echo "Starting bridge server..."
-ssh_cmd 'bash -c "
-cd bridge-server
-docker-compose up -d --build 2>&1 | head -20
-"'
+ssh_cmd 'cd sms-bridge-linphone/bridge-server && docker-compose up -d --build 2>&1 | head -20'
 
 # Step 7: Test
 echo
@@ -324,7 +325,7 @@ sleep 5
 
 # Test bridge health via SSH
 echo "Testing bridge health..."
-if ssh_cmd 'curl -f http://localhost:5000/health > /dev/null 2>&1'; then
+if ssh_cmd 'docker ps | grep -q "sms-bridge" && curl -f http://localhost:5000/health > /dev/null 2>&1'; then
     echo "✓ Bridge server running"
 else
     echo "⚠️  Bridge server health check failed (may still be starting)"
@@ -375,7 +376,7 @@ echo "  - android-wireguard-qr.png (QR code image)"
 echo
 echo "Useful remote commands:"
 echo "  - SSH: ssh -i \$HOME/.ssh/id_ed25519 $VPS_USER@$VPS_HOST"
-echo "  - Bridge logs: ssh $VPS_USER@$VPS_HOST 'cd bridge-server && docker-compose logs -f'"
-echo "  - Bridge down: ssh $VPS_USER@$VPS_HOST 'cd bridge-server && docker-compose down'"
+echo "  - Bridge logs: ssh $VPS_USER@$VPS_HOST 'cd sms-bridge-linphone/bridge-server && docker-compose logs -f'"
+echo "  - Bridge down: ssh $VPS_USER@$VPS_HOST 'cd sms-bridge-linphone/bridge-server && docker-compose down'"
 echo "  - Check VPN: ssh $VPS_USER@$VPS_HOST 'sudo wg show'"
 echo
