@@ -1,0 +1,52 @@
+{
+  "folders": [
+    {
+      "path": ".",
+    }
+  ],
+  "settings": {
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      "**/.DS_Store": true,
+      "**/venv": true
+    },
+    "files.associations": {
+      "*.conf": "ini",
+      "docker-compose*.yml": "yaml",
+      "Dockerfile*": "dockerfile"
+    },
+    "editor.rulers": [
+      80,
+      100
+    ],
+    "editor.tabSize": 4,
+    "[python]": {
+      "editor.tabSize": 4
+    },
+    "[kotlin]": {
+      "editor.tabSize": 4
+    },
+    "[yaml]": {
+      "editor.tabSize": 2
+    },
+    "[markdown]": {
+      "editor.wordWrap": "on"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "ms-azuretools.vscode-docker",
+      "redhat.vscode-yaml",
+      "yzhang.markdown-all-in-one",
+      "fwcd.kotlin",
+      "ms-vscode.makefile-tools"
+    ]
+  }
+}

@@ -1,0 +1,104 @@
+# nginx Configuration
+# Save as: /etc/nginx/sites-available/sms-bridge
+
+# Bridge Server
+server {
+    listen 80;
+    server_name bridge.your-domain.com;
+    
+    # Redirect to HTTPS
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name bridge.your-domain.com;
+    
+    # SSL Configuration
+    ssl_certificate /etc/letsencrypt/live/bridge.your-domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/bridge.your-domain.com/privkey.pem;
+    
+    # SSL Security
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+    
+    # Logging
+    access_log /var/log/nginx/bridge-access.log;
+    error_log /var/log/nginx/bridge-error.log;
+    
+    # Proxy to bridge server
+    location / {
+        proxy_pass http://localhost:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Timeout for long-running requests
+        proxy_read_timeout 90s;
+        proxy_connect_timeout 90s;
+    }
+}
+
+# mmsgate Server
+server {
+    listen 80;
+    server_name mms.your-domain.com;
+    
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name mms.your-domain.com;
+    
+    ssl_certificate /etc/letsencrypt/live/mms.your-domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/mms.your-domain.com/privkey.pem;
+    
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    
+    access_log /var/log/nginx/mmsgate-access.log;
+    error_log /var/log/nginx/mmsgate-error.log;
+    
+    location / {
+        proxy_pass http://localhost:38443;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+# Flexisip SIP (TCP/TLS)
+# Note: SIP over TLS uses port 5061 directly, not HTTP
+# This is just for websocket support if needed
+server {
+    listen 80;
+    server_name sip.your-domain.com;
+    
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name sip.your-domain.com;
+    
+    ssl_certificate /etc/letsencrypt/live/sip.your-domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/sip.your-domain.com/privkey.pem;
+    
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    
+    # SIP over WebSocket (if needed)
+    location / {
+        proxy_pass http://localhost:5060;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+    }
+}

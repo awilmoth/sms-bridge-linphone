@@ -1,0 +1,65 @@
+# Flexisip Configuration
+# Save as: flexisip.conf
+
+[global]
+# Logging
+log-level = message
+log-filename = /var/log/flexisip/flexisip.log
+
+# SIP transport
+transports = sips:*:5061
+
+# TLS certificates
+tls-certificates-dir = /etc/flexisip/certs
+tls-certificates-file = fullchain.pem
+tls-certificates-private-key = privkey.pem
+
+[module::Registrar]
+enabled = true
+
+# Allow Linphone clients to register
+max-contacts-per-registration = 3
+
+# Registration expiry
+reg-max-expires = 3600
+
+[module::Router]
+enabled = true
+
+# Forward messages to appropriate destination
+use-global-domain = true
+
+# Message routing
+message-fork-late = true
+message-accept-in-transaction = true
+
+[module::MediaRelay]
+enabled = false
+
+[module::Forward]
+enabled = true
+
+# Route to mmsgate for MESSAGE requests
+route = sip:*@sip.your-domain.com -> sip:mmsgate@localhost:38443
+
+[module::Authentication]
+enabled = true
+
+# Use VoIP.ms credentials
+db-implementation = file
+datasource = /etc/flexisip/users.db
+
+# Password hashing
+hashed-passwords = false
+
+[module::PushNotification]
+enabled = true
+
+# Firebase for Linphone push
+firebase-service-account = /etc/flexisip/firebase-credentials.json
+
+[module::Presence]
+enabled = false
+
+[module::LoadBalancer]
+enabled = false

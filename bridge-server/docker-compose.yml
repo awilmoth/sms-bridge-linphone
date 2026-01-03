@@ -1,0 +1,88 @@
+version: "3.8"
+
+services:
+  # Local Docker Registry
+  registry:
+    image: registry:2
+    container_name: local-registry
+    restart: unless-stopped
+    ports:
+      - "5001:5000"
+    volumes:
+      - registry-data:/var/lib/registry
+    networks:
+      - sms-net
+
+  # SMS/MMS Bridge Server
+  sms-bridge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: localhost:5001/sms-bridge:latest
+    container_name: sms-bridge
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - sms-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Flexisip SIP Proxy (runs INSIDE mmsgate container)
+  # DO NOT create a separate flexisip service
+  # Flexisip is included in the mmsgate image via multi-layer build
+  # Port 5060/5061 are exposed by mmsgate container
+
+  # mmsgate (VoIP.ms MMS bridge)
+  mmsgate:
+    image: localhost:5001/mmsgate:latest
+    container_name: mmsgate
+    restart: unless-stopped
+    ports:
+      - "5060:5060/udp" # SIP (flexisip inside mmsgate)
+      - "5061:5061/tcp" # SIP TLS (flexisip inside mmsgate)
+      - "38443:38443" # MMS webhook
+      - "38000-38999:38000-38999/udp" # RTP media
+    volumes:
+      - ./mmsgate.conf:/etc/mmsgate/mmsgate.conf:ro
+      - ./flexisip.conf:/etc/flexisip/flexisip.conf:ro
+      - ./certs:/etc/mmsgate/certs:ro
+      - ./certs:/etc/flexisip/certs:ro
+      - mmsgate-data:/var/lib/mmsgate
+    networks:
+      - sms-net
+
+  # nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    networks:
+      - sms-net
+    depends_on:
+      - sms-bridge
+      - mmsgate
+
+networks:
+  sms-net:
+    driver: bridge
+
+volumes:
+  mmsgate-data:
+    driver: local
+  registry-data:
+    driver: local

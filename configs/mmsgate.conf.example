@@ -1,0 +1,45 @@
+# mmsgate Configuration
+# Save as: mmsgate.conf
+
+# CRITICAL: Point to bridge instead of VoIP.ms API
+[voipms]
+# Use bridge as proxy for VoIP.ms API
+api_url = https://bridge.your-domain.com:5000/voipms/api
+
+# Your actual VoIP.ms credentials
+username = your_email@example.com
+password = your_voipms_password
+
+# Your VoIP.ms DID (for caller ID)
+did = 15551234567
+
+# Flexisip SIP server configuration
+[flexisip]
+domain = sip.your-domain.com
+transport = tls
+port = 5061
+
+# Server configuration
+[server]
+listen = 0.0.0.0
+port = 38443
+
+# SSL/TLS certificates
+cert_file = /etc/mmsgate/certs/fullchain.pem
+key_file = /etc/mmsgate/certs/privkey.pem
+
+# Logging
+[logging]
+level = info
+file = /var/log/mmsgate/mmsgate.log
+
+# Media handling
+[media]
+# Where to store MMS media files
+storage_path = /var/lib/mmsgate/media
+
+# Maximum attachment size (bytes)
+max_size = 2097152  # 2MB
+
+# Supported media types
+allowed_types = image/jpeg,image/png,image/gif,video/mp4
