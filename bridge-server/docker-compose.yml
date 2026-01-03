@@ -36,6 +36,28 @@ services:
       retries: 3
       start_period: 10s
 
+  # Health Monitor - sends SMTP alerts when services go down
+  monitor:
+    image: python:3.11-slim
+    container_name: sms-bridge-monitor
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./monitor.py:/app/monitor.py:ro
+      - monitor-logs:/app
+    working_dir: /app
+    command: >
+      bash -c "pip install --no-cache-dir requests &&
+               python -u monitor.py"
+    networks:
+      - sms-net
+    depends_on:
+      - sms-bridge
+      - mmsgate
+
   # Flexisip SIP Proxy (runs INSIDE mmsgate container)
   # DO NOT create a separate flexisip service
   # Flexisip is included in the mmsgate image via multi-layer build
@@ -85,4 +107,6 @@ volumes:
   mmsgate-data:
     driver: local
   registry-data:
+    driver: local
+  monitor-logs:
     driver: local

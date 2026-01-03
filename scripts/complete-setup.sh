@@ -166,6 +166,18 @@ BRIDGE_SECRET=$(openssl rand -hex 32)
 # Server Configuration
 FLASK_HOST=0.0.0.0
 FLASK_PORT=5000
+
+# Monitoring & Alerts
+MONITOR_CHECK_INTERVAL=60
+MONITOR_ALERT_COOLDOWN=300
+
+# SMTP Configuration (optional - for health monitoring alerts)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASSWORD=
+SMTP_FROM=
+SMTP_TO=
 ENV_EOF
     
     echo "✓ Configuration generated: bridge-server/.env"
@@ -173,6 +185,7 @@ ENV_EOF
     echo "⚠️  IMPORTANT: Edit bridge-server/.env and update:"
     echo "    - FOSSIFY_API_URL: Use your WireGuard Android IP (10.0.0.2)"
     echo "    - FOSSIFY_AUTH_TOKEN: Use token from Fossify app settings"
+    echo "    - SMTP_USER/SMTP_PASSWORD: Optional, for email alerts when services fail"
     echo
     echo "Note: VoIP.ms credentials go in mmsgate.conf, NOT here"
     echo

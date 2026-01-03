@@ -14,6 +14,7 @@ This system creates a secure bridge between an Android phone with a SIM card (th
 - ✅ **Real cellular number** - for SMS/MMS and voice (with bring-your-own-DID provider)
 - ✅ **Single unified app** - everything in Linphone
 - ✅ **Provider-agnostic** - use any SIP provider that supports number forwarding (or none)
+- ✅ **Health monitoring** - automatic SMTP alerts when services go down
 
 ## Architecture
 
@@ -190,6 +191,7 @@ docker-compose restart mmsgate
 VPS Docker Compose:
 ├─ sms-bridge:5000 (Flask, message router)
 ├─ mmsgate:38443 + 5060/5061 (SIP messaging + Flexisip proxy)
+├─ monitor (health checks + SMTP alerts)
 ├─ nginx:80/443 (HTTPS reverse proxy)
 ├─ registry:5001 (Local Docker image storage)
 └─ WireGuard VPN:51820 (encrypted tunnel to Android)
@@ -409,6 +411,9 @@ A: Yes. The SMS/MMS bridge is provider-agnostic. You can use any SIP provider th
 
 **Q: How do I use my cellular number for voice calls?**  
 A: Use a VoIP provider that supports bring-your-own-DID (like VoIP.ms). Configure call forwarding from your cellular number to your provider's DID, then set up that DID in Linphone. Outbound calls will show your cellular caller ID.
+
+**Q: How does health monitoring work?**  
+A: The monitor service checks bridge and mmsgate health every 60 seconds. If a service goes down, it sends an email alert via SMTP (configurable). You'll get alerts when services fail and when they recover. Configure SMTP settings in `.env` to enable alerts.
 
 ## Next Steps
 
