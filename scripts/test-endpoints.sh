@@ -1,16 +1,20 @@
 #!/bin/bash
 # Test all SMS Bridge endpoints
 
+# Determine script directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
+
 # Load configuration
-if [ -f ../bridge-server/.env ]; then
-    source ../bridge-server/.env
+if [ -f "$PROJECT_ROOT/bridge-server/.env" ]; then
+    source "$PROJECT_ROOT/bridge-server/.env"
 else
-    echo "ERROR: .env file not found"
-    echo "Run this script from the scripts/ directory"
+    echo "ERROR: .env file not found at $PROJECT_ROOT/bridge-server/.env"
     exit 1
 fi
 
-BRIDGE_URL="http://localhost:5000"
+BRIDGE_URL="${BRIDGE_URL:-http://localhost:5000}"
+FOSSIFY_API_URL="${FOSSIFY_API_URL:-http://10.0.0.2:8080}"
 TEST_PHONE="+15551234567"
 
 echo "====================================="
@@ -31,12 +35,16 @@ echo
 
 # Test 2: Fossify API health
 echo "[2/5] Testing Fossify API..."
-response=$(curl -s -o /dev/null -w "%{http_code}" $FOSSIFY_API_URL/health)
-if [ "$response" == "200" ]; then
-    echo "✓ Fossify API OK"
+if [ -z "$FOSSIFY_API_URL" ]; then
+    echo "⊘ Fossify API URL not configured, skipping"
 else
-    echo "✗ Fossify API FAILED (HTTP $response)"
-    echo "  Make sure Fossify is running and accessible"
+    response=$(curl -s -o /dev/null -w "%{http_code}" "$FOSSIFY_API_URL/health" 2>/dev/null)
+    if [ "$response" == "200" ]; then
+        echo "✓ Fossify API OK"
+    else
+        echo "✗ Fossify API FAILED (HTTP $response)"
+        echo "  Make sure Fossify is running and accessible at $FOSSIFY_API_URL"
+    fi
 fi
 echo
 
@@ -116,4 +124,4 @@ echo
 echo "If tests failed:"
 echo "  - Check docker-compose logs -f"
 echo "  - Verify .env configuration"
-echo "  - Check network connectivity"
+echo "  - Check network connectivity"echo "====================================="

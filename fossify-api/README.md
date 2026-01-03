@@ -2,9 +2,17 @@
 
 This directory contains the code you need to add to Fossify Messages to enable HTTP API control.
 
+## Quick Start - Download APK
+
+Pre-built APK with API integration is available at:
+- **GitHub**: [https://github.com/awilmoth/Messages](https://github.com/awilmoth/Messages)
+- **Actions Tab**: [https://github.com/awilmoth/Messages/actions](https://github.com/awilmoth/Messages/actions)
+
+Look for the latest successful build in the Actions tab, download the `fossify-api-debug` artifact.
+
 ## Files
 
-- `ApiServer.kt` - NanoHTTPD server implementation
+- `ApiServer.kt` - Native Java socket server implementation
 - `ApiService.kt` - Background service to run the server
 - `SmsReceiver.kt` - Webhook client modifications
 
@@ -19,21 +27,7 @@ cd Messages
 git checkout -b add-api-server
 ```
 
-### 2. Add Dependencies
-
-Edit `app/build.gradle.kts`, add to dependencies section:
-
-```kotlin
-dependencies {
-    // Existing dependencies...
-    
-    // HTTP server
-    implementation("org.nanohttpd:nanohttpd:2.3.1")
-    implementation("com.google.code.gson:gson:2.10.1")
-}
-```
-
-### 3. Add API Server Code
+### 2. Add API Server Code
 
 Copy `ApiServer.kt` to:
 ```
@@ -45,13 +39,15 @@ Copy `ApiService.kt` to:
 app/src/main/java/org/fossify/messages/api/ApiService.kt
 ```
 
-### 4. Modify SMS Receiver
+**Note**: The API server uses native Java sockets and requires no external dependencies beyond the Android SDK.
+
+### 3. Modify SMS Receiver
 
 Add webhook notification code from `SmsReceiver.kt` to your existing SMS/MMS receiver.
 
 Location: `app/src/main/java/org/fossify/messages/receivers/SmsReceiver.kt`
 
-### 5. Add to AndroidManifest.xml
+### 4. Add to AndroidManifest.xml
 
 ```xml
 <service
@@ -61,9 +57,6 @@ Location: `app/src/main/java/org/fossify/messages/receivers/SmsReceiver.kt`
 
 <uses-permission android:name="android.permission.INTERNET" />
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-```
-
-### 6. Add Settings UI
 
 Add settings section to allow user to configure:
 - Enable API (checkbox)
@@ -72,7 +65,7 @@ Add settings section to allow user to configure:
 - Webhook URL
 - Webhook Auth Token
 
-### 7. Start Service
+### 5. Start Service
 
 In your MainActivity or Application class:
 
@@ -82,104 +75,61 @@ if (config.isApiEnabled) {
 }
 ```
 
-### 8. Build APK
+### 6. Build & Deploy
 
+**Manual Build:**
 ```bash
-# Debug build
 ./gradlew assembleDebug
-
-# Release build
-./gradlew assembleRelease
+adb install app/build/outputs/apk/foss/debug/app-debug.apk
 ```
 
-### 9. Sign APK (Release Only)
-
-```bash
-keytool -genkey -v -keystore my-release-key.jks \
-    -keyalg RSA -keysize 2048 -validity 10000 \
-    -alias my-key-alias
-
-jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
-    -keystore my-release-key.jks \
-    app/build/outputs/apk/release/app-release-unsigned.apk \
-    my-key-alias
-
-zipalign -v 4 \
-    app/build/outputs/apk/release/app-release-unsigned.apk \
-    fossify-messages-api.apk
-```
-
-### 10. Install
-
-```bash
-adb install fossify-messages-api.apk
-```
+**Automated Builds:**
+The GitHub Actions workflow automatically builds on every push. Get the APK:
+1. Go to [GitHub Actions](https://github.com/awilmoth/Messages/actions)
+2. Click the latest successful build
+3. Download `fossify-api-debug` artifact
+4. Install: `adb install app-debug.apk`
 
 ## API Endpoints
 
-Once installed and configured, the app exposes:
+The API server runs on port 8080 and provides:
 
-**POST /send_sms**
+**GET /api/status**
 ```json
 {
-  "phoneNumber": "+15551234567",
-  "message": "Hello from API"
+  "status": "running",
+  "port": 8080
 }
 ```
 
-**POST /send_mms**
+**GET /api/send-sms**
 ```json
 {
-  "phoneNumber": "+15551234567",
-  "message": "Hello from API",
-  "attachments": ["base64_encoded_image_data"]
+  "status": "queued"
 }
 ```
 
-**GET /health**
-```json
-{
-  "status": "ok",
-  "server": "fossify-api"
-}
-```
+All other endpoints return 404.
 
 ## Security
 
-**API Auth Token:**
-- Generate with: `openssl rand -hex 32`
-- Include in requests: `Authorization: Bearer YOUR_TOKEN`
+The API server runs on localhost (127.0.0.1) by default. Expose via:
 
-**Webhook Auth Token:**
-- Generate with: `openssl rand -hex 32`
-- App includes in webhook calls: `Authorization: Bearer YOUR_TOKEN`
+### WireGuard VPN (Recommended)
 
-## Exposing API
+Use WireGuard tunnel to securely access the API from another device:
+- Android device: 10.0.0.2:8080  
+- Host machine: 10.0.0.1:8080
 
-### Option A: WireGuard VPN (Recommended)
+See [WIREGUARD-SETUP.md](../WIREGUARD-SETUP.md) for configuration.
 
-**Setup WireGuard tunnel (10.0.0.2 ↔ 10.0.0.1) via complete-setup.sh**
+### ngrok (Quick Testing)
 
 ```bash
-# Access via: http://10.0.0.2:8080
-```
-
-This is the most secure option - the API is accessible only when connected to the WireGuard VPN.
-
-### Option B: ngrok
-
-```bash
-# On Android via Termux
+# Via Termux on Android
 pkg install ngrok
 ngrok http 8080
-# Get URL: https://abc123.ngrok.io
 ```
-
-### Option C: Port Forward
-
-Forward port 8080 on your router to Android phone's IP.
-
-**Not recommended** - use WireGuard instead for security.
 
 ## Testing
 
