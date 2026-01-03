@@ -10,10 +10,10 @@ This system creates a secure bridge between an Android phone with a SIM card (th
 
 - ✅ **SMS** (bidirectional) via cellular in Linphone
 - ✅ **MMS with photos** (bidirectional) via cellular in Linphone
-- ✅ **Voice calls** (optional) via any SIP/VoIP provider
-- ✅ **Real cellular number** - recipients see your actual number
+- ✅ **Voice calls** (optional) using your real cellular number via SIP forwarding
+- ✅ **Real cellular number** - for SMS/MMS and voice (with bring-your-own-DID provider)
 - ✅ **Single unified app** - everything in Linphone
-- ✅ **Provider-agnostic** - use any SIP provider (or none)
+- ✅ **Provider-agnostic** - use any SIP provider that supports number forwarding (or none)
 
 ## Architecture
 
@@ -68,9 +68,9 @@ INCOMING (Someone → Your cellular number):
     ↓ SIP MESSAGE
   Linphone app (receives notification)
 
-CALLS (Optional, any SIP provider):
-  Inbound: Cellular → Provider → Linphone (via SIP)
-  Outbound: Linphone → Provider → PSTN
+CALLS (Optional, any SIP provider with bring-your-own-DID):
+  Inbound: Your cellular number → VoIP provider → Linphone (via SIP)
+  Outbound: Linphone → VoIP provider → PSTN (with your cellular caller ID)
 ```
 
 ## Key Innovation
@@ -82,9 +82,10 @@ CALLS (Optional, any SIP provider):
 - Works with **any SIP provider** or even **without voice calling at all**
 
 **Voice calls (optional, provider-agnostic):**
-- Use any VoIP provider (VoIP.ms, Twilio, Vonage, Asterisk, etc.)
-- Provider handles call forwarding to your Linphone SIP address
-- Completely separate from SMS/MMS flow
+- Use any VoIP provider that supports bring-your-own-DID (VoIP.ms, Twilio, Vonage, etc.)
+- Forward your cellular number to your Linphone SIP address via the provider
+- Outbound calls can use your cellular caller ID through the provider
+- Completely separate from SMS/MMS flow (which always uses cellular)
 - Can be omitted entirely - this system works for messaging alone
 
 ## Project Structure
@@ -124,7 +125,7 @@ sms-bridge-linphone/
 - **VPS/Server** with public IP and domain (2GB RAM minimum)
 - **Docker & docker-compose**
 - **WireGuard** (automated setup included)
-- *Optional:* **SIP/VoIP account** (for voice calls; any provider with SIP support)
+- *Optional:* **SIP/VoIP provider** that supports bring-your-own-DID (for seamless number forwarding and voice calls)
 
 ### 4-Phase Deployment
 
@@ -156,19 +157,21 @@ cd bridge-server/
 # - Starts all services
 ```
 
-**Phase 3: Configure Services** *(optional if voice calls needed)*
+**Phase 3: Configure Services** *(optional for voice calls)*
 ```bash
 cd bridge-server/
-nano mmsgate.conf  # Add your VoIP provider credentials
+nano mmsgate.conf  # Add your VoIP provider credentials (if using voice)
 docker-compose restart mmsgate
-# SMS/MMS works immediately without this step
+# Note: SMS/MMS works immediately without this step
+# Voice calls require: provider setup + cellular number forwarding
 ```
 
 **Phase 4: Setup Linphone** *(optional for voice calls)*
 ```bash
 # Install Linphone app on your device
 # Add SIP account (your provider's credentials)
-# Test SMS/MMS (works without SIP account)
+# Configure your cellular provider to forward calls to your VoIP DID
+# Test SMS/MMS (works without SIP account or call forwarding)
 ```
 
 ### Technology Stack
@@ -402,7 +405,10 @@ A: No, only SMS/MMS. Those apps require the phone itself to be actively running 
 A: Very reliable for SMS. MMS reliability depends on carrier settings and network quality. Voice calls depend on your chosen SIP provider.
 
 **Q: Can I switch SIP/VoIP providers?**  
-A: Yes. The SMS/MMS bridge is provider-agnostic. You can use any SIP provider or none at all (SMS/MMS only mode).
+A: Yes. The SMS/MMS bridge is provider-agnostic. You can use any SIP provider that supports bring-your-own-DID, or none at all (SMS/MMS only mode).
+
+**Q: How do I use my cellular number for voice calls?**  
+A: Use a VoIP provider that supports bring-your-own-DID (like VoIP.ms). Configure call forwarding from your cellular number to your provider's DID, then set up that DID in Linphone. Outbound calls will show your cellular caller ID.
 
 ## Next Steps
 
@@ -412,9 +418,3 @@ A: Yes. The SMS/MMS bridge is provider-agnostic. You can use any SIP provider or
 4. **Configure:** Set up WireGuard and test endpoints
 
 ---
-
-**Status:** Production-ready
-
-**Last Updated:** January 2026
-
-**Maintained by:** Your infrastructure, your control
