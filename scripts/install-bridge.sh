@@ -15,7 +15,7 @@ if [ "$EUID" -eq 0 ]; then
 fi
 
 # Check prerequisites
-echo "[1/7] Checking prerequisites..."
+echo "[1/8] Checking prerequisites..."
 
 if ! command -v docker &> /dev/null; then
     echo "Docker not found. Installing..."
@@ -35,7 +35,7 @@ echo "Prerequisites OK"
 echo
 
 # Generate secrets
-echo "[2/7] Generating secrets..."
+echo "[2/8] Generating secrets..."
 if [ ! -f .env ]; then
     ../scripts/generate-secrets.sh > .env
     echo "Secrets generated in .env"
@@ -51,7 +51,7 @@ fi
 
 # Validate configuration
 echo
-echo "[3/7] Validating configuration..."
+echo "[3/8] Validating configuration..."
 source .env
 
 if [ -z "$FOSSIFY_API_URL" ] || [ "$FOSSIFY_API_URL" == "http://10.0.0.2:8080" ]; then
@@ -68,7 +68,7 @@ echo "Configuration OK"
 echo
 
 # Check for mmsgate
-echo "[4/7] Checking mmsgate repository..."
+echo "[4/8] Checking mmsgate repository..."
 if [ ! -d "mmsgate" ]; then
     echo "⚠ mmsgate not found. Cloning from GitHub..."
     git clone --recursive https://github.com/RVgo4it/mmsgate
@@ -78,21 +78,21 @@ echo "mmsgate OK"
 echo
 
 # Build and push to registry
-echo "[5/7] Building Docker images and pushing to local registry..."
+echo "[5/8] Building Docker images and pushing to local registry..."
 ../scripts/build-and-push-images.sh
 
 echo
-echo "[6/7] Starting services..."
+echo "[6/8] Starting services..."
 docker-compose up -d
 
 # Wait for startup
 echo
-echo "[7/7] Waiting for services to start..."
+echo "[7/8] Waiting for services to start..."
 sleep 10
 
 # Check health
 echo
-echo "[7/7] Checking health..."
+echo "[8/8] Checking health..."
 if curl -f http://localhost:5000/health &> /dev/null; then
     echo
     echo "====================================="

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
 SMS/MMS Bridge Server
-Connects Fossify Messages (cellular) ↔ VoIP.ms (SIP)
+Connects Fossify Messages (cellular) ↔ mmsgate ↔ Linphone (SIP)
 
 Architecture:
-- Fossify Messages webhook → Bridge → VoIP.ms API (incoming from cellular)
-- VoIP.ms webhook → Bridge → Fossify API (outgoing to cellular)
-- mmsgate handles VoIP.ms ↔ Linphone
+- INCOMING: Fossify webhook → Bridge → mmsgate webhook → Linphone (via SIP MESSAGE)
+- OUTGOING: Linphone → mmsgate → Bridge (VoIP.ms API proxy) → Fossify API
+- Bridge proxies VoIP.ms API calls and routes them to Fossify cellular instead
 """
 
 import os
