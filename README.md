@@ -142,7 +142,7 @@ cd scripts/
 
 **Setup SSH Keys First (Recommended)**
 ```bash
-ssh-copy-id -i ~/.ssh/id_rsa root@your-vps-ip
+ssh-copy-id -i ~/.ssh/id_ed25519 root@your-vps-ip
 ```
 
 ### 4-Phase Deployment

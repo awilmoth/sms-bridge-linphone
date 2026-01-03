@@ -52,11 +52,11 @@ This will:
 **Setup SSH Keys (Recommended)**
 
 ```bash
-# Generate SSH key if you don't have one
-ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa
+# Generate SSH key if you don't have one (Ed25519 is more secure than RSA)
+ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519
 
 # Copy to VPS (prompted for password once)
-ssh-copy-id -i ~/.ssh/id_rsa root@your-vps-ip
+ssh-copy-id -i ~/.ssh/id_ed25519 root@your-vps-ip
 
 # Now run remote setup with key auth
 ./remote-setup.sh
