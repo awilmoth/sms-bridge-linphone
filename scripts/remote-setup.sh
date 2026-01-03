@@ -258,22 +258,23 @@ echo "[6/7] Setting up bridge server..."
 
 # Install Docker if needed
 echo "Installing Docker and docker-compose on VPS..."
-ssh_cmd 'bash -c "
+ssh_cmd '
 if ! command -v docker &> /dev/null; then
-    curl -fsSL https://get.docker.com | sh
-    sudo usermod -aG docker \$USER
-    echo \"✓ Docker installed\"
+    curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
+    sudo bash /tmp/get-docker.sh > /dev/null 2>&1
+    sudo usermod -aG docker $USER
+    echo "✓ Docker installed"
 else
-    echo \"✓ Docker already installed\"
+    echo "✓ Docker already installed"
 fi
 
 if ! command -v docker-compose &> /dev/null; then
-    sudo apt install -y docker-compose
-    echo \"✓ docker-compose installed\"
+    sudo apt-get update > /dev/null && sudo apt-get install -y docker-compose > /dev/null 2>&1
+    echo "✓ docker-compose installed"
 else
-    echo \"✓ docker-compose already installed\"
+    echo "✓ docker-compose already installed"
 fi
-"'
+'
 
 # Generate and send .env to VPS
 echo "Generating bridge configuration..."
