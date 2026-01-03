@@ -126,15 +126,36 @@ sms-bridge-linphone/
 - **WireGuard** (automated setup included)
 - *Optional:* **SIP/VoIP provider** that supports bring-your-own-DID (for seamless number forwarding and voice calls)
 
+### Remote Setup (Recommended)
+
+Run setup from your local admin machine via SSH:
+
+```bash
+cd scripts/
+./remote-setup.sh
+
+# You'll be prompted for:
+# - VPS hostname/IP address
+# - SSH username (default: root)
+# - Authentication method (SSH keys or password)
+```
+
+**Setup SSH Keys First (Recommended)**
+```bash
+ssh-copy-id -i ~/.ssh/id_rsa root@your-vps-ip
+```
+
 ### 4-Phase Deployment
 
 **Phase 0: WireGuard VPN**
 ```bash
-cd scripts/
+# Option A: Remote setup from your local machine (recommended)
+./scripts/remote-setup.sh
+
+# Option B: Direct setup on the VPS
+ssh root@your-vps-ip
+cd sms-bridge-linphone/scripts
 ./complete-setup.sh
-# - Installs WireGuard on VPS
-# - Generates keys and QR code
-# - Provides Android installation instructions
 ```
 
 **Phase 1: Build Fossify**

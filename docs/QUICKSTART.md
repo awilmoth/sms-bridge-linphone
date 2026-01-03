@@ -24,10 +24,63 @@ VPS (Bridge) ← WireGuard VPN → Android (Home) ← Cellular → Your Number
 
 **Why:** Android phone has no public IP and is behind NAT/firewall. WireGuard creates encrypted tunnel so VPS can reach phone.
 
-### One-Command Setup
+### Setup Options
+
+#### Option A: Remote Setup from Local Machine (Recommended)
+
+Run setup from your local admin machine via SSH:
 
 ```bash
 cd scripts/
+./remote-setup.sh
+```
+
+You'll be prompted for:
+- VPS hostname/IP address
+- SSH username (default: root)
+- Authentication: SSH keys (recommended) or password (with sshpass)
+
+This will:
+1. SSH into VPS and install WireGuard
+2. Generate VPN keys on VPS
+3. Configure WireGuard server
+4. Generate Android client config locally
+5. Configure UFW firewall on VPS
+6. Deploy bridge server on VPS
+7. Show QR code on your local machine
+
+**Setup SSH Keys (Recommended)**
+
+```bash
+# Generate SSH key if you don't have one
+ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa
+
+# Copy to VPS (prompted for password once)
+ssh-copy-id -i ~/.ssh/id_rsa root@your-vps-ip
+
+# Now run remote setup with key auth
+./remote-setup.sh
+```
+
+**Benefits:**
+- Setup from your local machine (no VPS access needed)
+- All credentials stored locally
+- Cleaner, more secure process
+- QR code displayed on your machine
+
+#### Option B: Direct Setup on VPS
+
+SSH into VPS and run setup directly:
+
+```bash
+# SSH into VPS
+ssh root@your-vps-ip
+
+# Clone repository
+git clone https://github.com/yourusername/sms-bridge-linphone.git
+cd sms-bridge-linphone/scripts
+
+# Run setup on VPS
 ./complete-setup.sh
 ```
 
@@ -36,8 +89,8 @@ This will:
 2. Generate VPN keys
 3. Create server config (VPS = 10.0.0.1)
 4. Create client config (Android = 10.0.0.2)
-5. Show QR code for Android
-6. Configure UFW firewall (blocks all except SSH, WireGuard, VoIP)
+5. Show QR code on VPS console
+6. Configure UFW firewall
 7. Setup bridge server
 
 ### Firewall Configuration
@@ -51,19 +104,21 @@ The setup script automatically configures UFW (Uncomplicated Firewall) to:
 If you want to configure the firewall manually:
 
 ```bash
-cd scripts/
-./setup-firewall.sh
-```
+# For remote setup
+ssh root@your-vps-ip './sms-bridge-linphone/scripts/setup-firewall.sh'
 
-This script shows all firewall rules and provides detailed port documentation.
+# Or on VPS directly
+./scripts/setup-firewall.sh
+```
 
 ### Install on Android
 
 1. Install WireGuard from Play Store
 2. Tap "+" → "Scan from QR code"
-3. Scan QR code from setup script
-4. Toggle VPN ON
-5. Verify: Should show "Active"
+3. Scan QR code from setup script output
+4. Or import: `android-wireguard.conf` file
+5. Toggle VPN ON
+6. Verify: Should show "Active"
 
 ### Test VPN Connection
 
