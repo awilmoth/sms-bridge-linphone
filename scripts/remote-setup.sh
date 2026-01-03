@@ -361,11 +361,47 @@ docker tag mmsgate localhost:5001/mmsgate:latest
 docker push localhost:5001/mmsgate:latest > /dev/null 2>&1
 
 echo "✓ mmsgate image built and pushed"
-'
 
-# Start all bridge services
-echo "Starting bridge server..."
-ssh_cmd 'cd sms-bridge-linphone/bridge-server && docker-compose up -d --build 2>&1 | tail -10'
+# Monitor and wait for build completion, then auto-start containers
+echo ""
+echo "Monitoring build completion and starting services..."
+MAX_WAIT=600  # 10 minutes max wait for safety
+ELAPSED=0
+while [ $ELAPSED -lt $MAX_WAIT ]; do
+  if docker image ls | grep -q "^mmsgate "; then
+    echo "✓ All Docker layers built successfully!"
+    
+    # Start all services
+    echo ""
+    echo "Starting Docker containers..."
+    cd bridge-server
+    docker-compose up -d --build 2>&1 | grep -E "Creating|done|Up"
+    
+    # Wait for containers to be ready
+    echo "Waiting for services to start..."
+    sleep 10
+    
+    # Check if containers are running
+    if docker-compose ps | grep -q "sms-bridge"; then
+      echo "✓ Services started"
+    else
+      echo "⚠️  Some services may still be starting"
+    fi
+    
+    break
+  fi
+  
+  # Show build progress
+  echo "Still building mmsgate layers... ($(($ELAPSED / 10)) min)"
+  sleep 10
+  ELAPSED=$(($ELAPSED + 10))
+done
+
+if [ $ELAPSED -ge $MAX_WAIT ]; then
+  echo "⚠️  Build timeout. Check manually with: docker image ls | grep mmsgate"
+  echo "Then start containers with: docker-compose up -d"
+fi
+'
 
 # Step 7: Test
 echo
