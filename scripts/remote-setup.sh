@@ -193,13 +193,26 @@ echo "✓ Configuration saved to: android-wireguard.conf"
 # Generate QR code locally
 echo
 echo "Generating QR code for easy Android setup..."
+if ! command -v qrencode &> /dev/null; then
+    echo "⚠️  qrencode not installed. Installing..."
+    if command -v apt &> /dev/null; then
+        sudo apt update > /dev/null && sudo apt install -y qrencode > /dev/null 2>&1
+    elif command -v yum &> /dev/null; then
+        sudo yum install -y qrencode > /dev/null 2>&1
+    elif command -v brew &> /dev/null; then
+        brew install qrencode > /dev/null 2>&1
+    else
+        echo "⚠️  Could not install qrencode. Install manually: sudo apt install qrencode"
+    fi
+fi
+
 if command -v qrencode &> /dev/null; then
     qrencode -t ansiutf8 <<< "$CLIENT_CONFIG"
     echo
     qrencode -t png -o android-wireguard-qr.png <<< "$CLIENT_CONFIG" 2>/dev/null || true
     echo "✓ QR code image saved: android-wireguard-qr.png"
 else
-    echo "⚠️  qrencode not installed. Install with: sudo apt install qrencode"
+    echo "⚠️  qrencode still not available. You can import android-wireguard.conf directly into WireGuard app"
 fi
 
 echo "✓ Scan this QR code with WireGuard Android app"
