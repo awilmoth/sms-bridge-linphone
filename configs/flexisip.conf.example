@@ -45,7 +45,8 @@ route = sip:*@sip.your-domain.com -> sip:mmsgate@localhost:38443
 [module::Authentication]
 enabled = true
 
-# Use VoIP.ms credentials
+# User credentials for the bridge SIP server
+# Users register here with their bridge SIP account (you choose username/password)
 db-implementation = file
 datasource = /etc/flexisip/users.db
 

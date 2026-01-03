@@ -179,7 +179,9 @@ cd bridge-server/
 #   Transport: TLS
 
 # Test SMS/MMS - send a message and receive replies!
-# (Optional) For voice calls: add VoIP provider credentials in mmsgate.conf
+# (Optional) For voice calls:
+#   - Add VoIP provider credentials in mmsgate.conf (Phase 3)
+#   - Configure provider to forward calls to sip.your-domain.com
 ```
 
 ### Technology Stack
