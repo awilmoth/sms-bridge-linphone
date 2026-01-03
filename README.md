@@ -413,7 +413,7 @@ A: Yes. The SMS/MMS bridge is provider-agnostic. You can use any SIP provider th
 A: Use a VoIP provider that supports bring-your-own-DID (like VoIP.ms). Configure call forwarding from your cellular number to your provider's DID, then set up that DID in Linphone. Outbound calls will show your cellular caller ID.
 
 **Q: How does health monitoring work?**  
-A: The monitor service checks bridge and mmsgate health every 60 seconds. If a service goes down, it sends an email alert via SMTP (configurable). You'll get alerts when services fail and when they recover. Configure SMTP settings in `.env` to enable alerts.
+A: The monitor service checks bridge health endpoint (HTTP) and mmsgate availability (TCP port check) every 60 seconds. If a service goes down, it sends an email alert via SMTP (configurable). You'll get alerts when services fail and when they recover. Configure SMTP settings in `.env` to enable alerts.
 
 ## Next Steps
 

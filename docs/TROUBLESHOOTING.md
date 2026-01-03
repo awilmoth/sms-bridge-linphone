@@ -478,11 +478,42 @@ sudo certbot renew --dry-run
 
 ### Monitoring
 
+The system includes an automated health monitoring service:
+
 ```bash
-# Setup basic monitoring
-# Add to crontab:
-*/5 * * * * curl -f http://localhost:5000/health || echo "Bridge down!" | mail -s "Alert" your@email.com
+# Check monitor status
+docker-compose ps monitor
+
+# View monitor logs
+docker-compose logs -f monitor
+
+# Restart monitor
+docker-compose restart monitor
 ```
+
+**Configure SMTP Alerts:**
+
+Edit `.env` and add your SMTP credentials:
+```bash
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+SMTP_FROM=your-email@gmail.com
+SMTP_TO=alert-recipient@example.com
+```
+
+Then restart the monitor:
+```bash
+docker-compose restart monitor
+```
+
+The monitor will:
+- Check bridge health endpoint every 60 seconds
+- Check mmsgate TCP port availability every 60 seconds
+- Send email alerts when services go down
+- Send recovery notifications when services come back up
+- Wait 5 minutes before repeating alerts for the same service
 
 ### Backup
 

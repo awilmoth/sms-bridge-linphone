@@ -8,6 +8,7 @@ import os
 import sys
 import time
 import logging
+import socket
 import requests
 import smtplib
 from email.mime.text import MIMEText
@@ -31,12 +32,15 @@ SERVICES = {
     'bridge': {
         'url': 'http://sms-bridge:5000/health',
         'name': 'SMS Bridge Server',
-        'timeout': 10
+        'timeout': 10,
+        'type': 'http'
     },
     'mmsgate': {
-        'url': 'http://mmsgate:38443/health',
+        'host': 'mmsgate',
+        'port': 38443,
         'name': 'mmsgate (MMS Gateway)',
-        'timeout': 10
+        'timeout': 5,
+        'type': 'tcp'
     }
     # Note: Flexisip doesn't have a standard HTTP health endpoint
     # It's monitored indirectly via mmsgate which depends on it
@@ -89,11 +93,23 @@ def send_email(subject: str, body: str) -> bool:
 def check_service(service_id: str, config: Dict) -> bool:
     """Check if a service is healthy"""
     try:
-        response = requests.get(
-            config['url'],
-            timeout=config['timeout']
-        )
-        return response.status_code == 200
+        if config.get('type') == 'http':
+            # HTTP health check
+            response = requests.get(
+                config['url'],
+                timeout=config['timeout']
+            )
+            return response.status_code == 200
+        elif config.get('type') == 'tcp':
+            # TCP port check (for services without HTTP health endpoints)
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(config['timeout'])
+            result = sock.connect_ex((config['host'], config['port']))
+            sock.close()
+            return result == 0
+        else:
+            logger.error(f"Unknown service type for {service_id}")
+            return False
     except Exception as e:
         logger.debug(f"{config['name']} health check failed: {e}")
         return False
@@ -113,13 +129,22 @@ def handle_service_down(service_id: str, config: Dict):
     if should_send_alert(service_id):
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         subject = f"🚨 SMS Bridge Alert: {service_name} is DOWN"
+        
+        # Build check info based on type
+        if config.get('type') == 'http':
+            check_info = f"Health URL: {config['url']}"
+        elif config.get('type') == 'tcp':
+            check_info = f"TCP Port: {config['host']}:{config['port']}"
+        else:
+            check_info = "Check type: unknown"
+        
         body = f"""
 SERVICE DOWN ALERT
 
 Service: {service_name}
 Status: UNREACHABLE
 Time: {timestamp}
-Health URL: {config['url']}
+{check_info}
 
 Action Required:
 1. Check service logs: docker-compose logs {service_id}
@@ -138,6 +163,14 @@ def handle_service_recovered(service_id: str, config: Dict):
     service_name = config['name']
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     
+    # Build check info based on type
+    if config.get('type') == 'http':
+        check_info = f"Health URL: {config['url']}"
+    elif config.get('type') == 'tcp':
+        check_info = f"TCP Port: {config['host']}:{config['port']}"
+    else:
+        check_info = "Check type: unknown"
+    
     subject = f"✅ SMS Bridge: {service_name} RECOVERED"
     body = f"""
 SERVICE RECOVERY
@@ -145,7 +178,7 @@ SERVICE RECOVERY
 Service: {service_name}
 Status: HEALTHY
 Time: {timestamp}
-Health URL: {config['url']}
+{check_info}
 
 The service is now responding normally.
 

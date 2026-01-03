@@ -254,5 +254,10 @@ echo
 echo "Useful commands:"
 echo "  - Check VPN: sudo wg show"
 echo "  - Bridge logs: docker-compose logs -f"
+echo "  - Monitor logs: docker-compose logs -f monitor"
 echo "  - Test endpoints: ../scripts/test-endpoints.sh"
+echo
+echo "Optional: Configure SMTP alerts"
+echo "  - Edit .env: SMTP_USER, SMTP_PASSWORD, SMTP_TO"
+echo "  - Restart: docker-compose restart monitor"
 echo

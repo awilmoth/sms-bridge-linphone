@@ -638,6 +638,19 @@ sms-bridge:5000 ←→ mmsgate:38443 (includes flexisip:5060/5061)
 
 ## Monitoring & Observability
 
+### Automated Health Monitoring
+
+The system includes an automated monitoring service that:
+- Checks bridge HTTP health endpoint (`/health`) every 60 seconds
+- Checks mmsgate TCP port (38443) availability every 60 seconds
+- Sends SMTP email alerts when services go down
+- Sends recovery notifications when services come back up
+- Implements 5-minute cooldown to prevent alert spam
+
+**Configuration:** See `.env.example` for SMTP settings.
+
+**Logs:** `docker-compose logs -f monitor`
+
 ### What to Monitor
 
 **Bridge Health:**
@@ -647,10 +660,10 @@ sms-bridge:5000 ←→ mmsgate:38443 (includes flexisip:5060/5061)
 - Network connectivity
 
 **Service Health:**
-- Bridge responds to `/health` endpoint
+- Bridge responds to `/health` endpoint (automated ✓)
 - Fossify API responds to `/health`
 - Flexisip SIP registration working
-- mmsgate process running
+- mmsgate process running (automated via TCP check ✓)
 
 **Message Flow:**
 - Incoming/outgoing message count

@@ -103,6 +103,7 @@ if curl -f http://localhost:5000/health &> /dev/null; then
     echo "  - Local registry: localhost:5001"
     echo "  - SMS Bridge: http://localhost:5000"
     echo "  - mmsgate: 38443 (MMS), 5060/5061 (SIP via flexisip), 38000-38999 (RTP)"
+    echo "  - Health Monitor: checking bridge and mmsgate"
     echo
     echo "Next steps:"
     echo "1. Configure Fossify webhook:"
@@ -112,7 +113,11 @@ if curl -f http://localhost:5000/health &> /dev/null; then
     echo "2. Configure mmsgate:"
     echo "   api_url = https://bridge.your-domain.com:5000/voipms/api"
     echo
-    echo "3. Setup nginx reverse proxy for HTTPS"
+    echo "3. Configure SMTP alerts (optional):"
+    echo "   Edit .env and set SMTP_USER, SMTP_PASSWORD, SMTP_TO"
+    echo "   Restart monitor: docker-compose restart monitor"
+    echo
+    echo "4. Setup nginx reverse proxy for HTTPS"
     echo
     echo "Useful commands:"
     echo "  - View logs: docker-compose logs -f"
