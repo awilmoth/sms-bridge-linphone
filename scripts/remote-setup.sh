@@ -315,7 +315,7 @@ echo "Sending configuration to VPS..."
 echo "$ENV_CONTENT" | ssh_cmd 'cat > /tmp/.env.tmp && cd sms-bridge-linphone/bridge-server && ([ ! -f .env ] && mv /tmp/.env.tmp .env || rm /tmp/.env.tmp)'
 
 # Build and push mmsgate image to local registry
-echo "Building mmsgate image (this may take a few minutes)..."
+echo "Building mmsgate image (this may take 15-20 minutes on first build)..."
 ssh_cmd '
 cd sms-bridge-linphone
 
@@ -334,18 +334,31 @@ for i in {1..10}; do
   sleep 2
 done
 
-# Go to root and build mmsgate
+# Go to root and build mmsgate (multi-stage build from parent directory)
 cd ..
 if [ ! -d mmsgate ]; then
     echo "Cloning mmsgate repository..."
     git clone --recursive https://github.com/RVgo4it/mmsgate
 fi
 
-echo "Building mmsgate image..."
-cd mmsgate
-docker build --network=host -t localhost:5001/mmsgate:latest .
+echo "Building mmsgate layers..."
+
+# Build flexisip layer (this takes ~5 minutes)
+echo "Building Flexisip layer..."
+docker build -t flexisip -f mmsgate/Dockerfile_flexisip_install --build-arg="BRANCH=release/2.3" . > /dev/null 2>&1 && echo "✓ Flexisip layer built" || echo "✗ Flexisip build failed"
+
+# Build PJSIP layer (this takes ~5 minutes)
+echo "Building PJSIP layer..."
+docker build -t pjsip -f mmsgate/Dockerfile_pjsip_install --build-arg="BRANCH=support-2.14.1" . > /dev/null 2>&1 && echo "✓ PJSIP layer built" || echo "✗ PJSIP build failed"
+
+# Build final mmsgate layer (this takes ~5 minutes)
+echo "Building mmsgate layer..."
+docker build -t mmsgate -f mmsgate/Dockerfile_mmsgate_install . > /dev/null 2>&1 && echo "✓ mmsgate layer built" || echo "✗ mmsgate build failed"
+
+# Tag and push to local registry
 echo "Pushing mmsgate to registry..."
-docker push localhost:5001/mmsgate:latest
+docker tag mmsgate localhost:5001/mmsgate:latest
+docker push localhost:5001/mmsgate:latest > /dev/null 2>&1
 
 echo "✓ mmsgate image built and pushed"
 '
