@@ -414,12 +414,3 @@ A: Use a VoIP provider that supports bring-your-own-DID (like VoIP.ms). Configur
 
 **Q: How does health monitoring work?**  
 A: The monitor service checks bridge health endpoint (HTTP) and mmsgate availability (TCP port check) every 60 seconds. If a service goes down, it sends an email alert via SMTP (configurable). You'll get alerts when services fail and when they recover. Configure SMTP settings in `.env` to enable alerts.
-
-## Next Steps
-
-1. **Start with:** [docs/QUICKSTART.md](docs/QUICKSTART.md)
-2. **Build Fossify:** [fossify-api/README.md](fossify-api/README.md)
-3. **Deploy bridge:** `cd bridge-server && ../scripts/install-bridge.sh`
-4. **Configure:** Set up WireGuard and test endpoints
-
----
