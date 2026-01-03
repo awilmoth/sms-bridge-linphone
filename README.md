@@ -128,53 +128,48 @@ sms-bridge-linphone/
 
 ### 4-Phase Deployment
 
-**Phase 0: WireGuard VPN** (5 min automated)
+**Phase 0: WireGuard VPN**
 ```bash
 cd scripts/
 ./complete-setup.sh
 # - Installs WireGuard on VPS
 # - Generates keys and QR code
-# - Shows you how to install on Android
+# - Provides Android installation instructions
 ```
 
-**Phase 1: Build Fossify** (30 min manual)
+**Phase 1: Build Fossify**
 ```bash
 # See fossify-api/README.md
 # - Fork Fossify Messages
 # - Add HTTP API code (provided)
-# - Build and install on Android
-# - Configure in-app settings
+# - Build and install APK on Android
+# - Configure API settings in app
 ```
 
-**Phase 2: Deploy Bridge + mmsgate** (30-40 min first run, < 5 min after)
+**Phase 2: Deploy Bridge + mmsgate**
 ```bash
 cd bridge-server/
 ../scripts/install-bridge.sh
 # - Clones mmsgate repo
-# - Builds mmsgate (flexisip + pjsip layers)
+# - Builds all Docker images (multi-layer)
 # - Pushes to local registry
 # - Starts all services
 ```
 
-**Phase 3: Configure mmsgate** (5 min manual, optional if no voice calls needed)
+**Phase 3: Configure Services** *(optional if voice calls needed)*
 ```bash
 cd bridge-server/
-nano mmsgate.conf  # Only needed if using a VoIP provider
-# - Add your VoIP provider credentials
-# - Configure call forwarding to bridge
-# - Restart service if needed
+nano mmsgate.conf  # Add your VoIP provider credentials
+docker-compose restart mmsgate
+# SMS/MMS works immediately without this step
 ```
 
-**Phase 4: Setup Linphone** (5 min manual, optional)
+**Phase 4: Setup Linphone** *(optional for voice calls)*
 ```bash
-# Install Linphone app
-# If using VoIP: Add SIP account (your provider's credentials)
-# If voice calls only: Configure call forwarding via your provider
-# Test SMS/MMS immediately (works without voice setup)
+# Install Linphone app on your device
+# Add SIP account (your provider's credentials)
+# Test SMS/MMS (works without SIP account)
 ```
-
-**Total automated setup: ~45 minutes (initial builds)**  
-**Subsequent deployments: < 5 minutes**
 
 ### Technology Stack
 
@@ -191,23 +186,15 @@ nano mmsgate.conf  # Only needed if using a VoIP provider
 ```
 VPS Docker Compose:
 ├─ sms-bridge:5000 (Flask, message router)
-├─ mmsgate:38443 + mmsgate:5060/5061 (MMS gateway + Flexisip SIP proxy)
+├─ mmsgate:38443 + 5060/5061 (SIP messaging + Flexisip proxy)
 ├─ nginx:80/443 (HTTPS reverse proxy)
 ├─ registry:5001 (Local Docker image storage)
-└─ WireGuard VPN:51820 (connects Android at 10.0.0.2)
+└─ WireGuard VPN:51820 (encrypted tunnel to Android)
 
 Note: Flexisip is built into mmsgate container, not a separate service
 ```
 
-**Key feature:** mmsgate is built once via multi-layer process (flexisip → pjsip → mmsgate), cached in registry, fast subsequent deployments.
-
-**Step 3: Configure mmsgate**
-- Point to bridge as "VoIP.ms API"
-- Setup webhook to receive messages
-
-**Step 4: Setup Linphone**
-- Add VoIP.ms SIP account
-- Test messaging and calls
+**Key feature:** mmsgate uses multi-layer build (flexisip → pjsip → mmsgate), cached in local registry for fast redeployment.
 
 ## Complete Setup
 
@@ -217,7 +204,7 @@ Follow the detailed steps in [docs/QUICKSTART.md](docs/QUICKSTART.md).
 
 ### Full MMS Support
 
-Unlike Android SMS Gateway, Fossify uses **native Android MMS APIs**:
+Uses **native Android MMS APIs** for complete functionality:
 - ✅ Send photos via MMS
 - ✅ Receive photos via MMS
 - ✅ Multiple attachments
@@ -225,26 +212,26 @@ Unlike Android SMS Gateway, Fossify uses **native Android MMS APIs**:
 
 ### Real Cellular Number
 
-All SMS/MMS use your actual cellular number:
-- ✅ Banking sees legitimate cellular number
-- ✅ No VoIP numbers for messages (completely separate flow)
-- ✅ Carrier-grade reliability via cellular
-- ✅ Works with shortcodes (2FA, banking)
+All SMS/MMS use the actual cellular number:
+- ✅ Banking and services see legitimate cellular number
+- ✅ No VoIP numbers for messaging (separate from voice)
+- ✅ Carrier-grade reliability
+- ✅ Works with shortcodes (2FA, OTP, banking)
 
 ### Flexible Architecture
 
-SMS/MMS flow is independent of voice/VoIP:
-- ✅ Works with **any SIP provider** (VoIP.ms, Twilio, Asterisk, etc.)
-- ✅ Works **without any voice calling** (SMS/MMS only)
-- ✅ Easy to switch providers - no code changes needed
-- ✅ Use Linphone as unified SIP client for any provider
+SMS/MMS independent of voice calling:
+- ✅ Works with **any SIP provider** (Twilio, Vonage, Asterisk, VoIP.ms, etc.)
+- ✅ Works **without voice calling** (SMS/MMS only mode)
+- ✅ Switch providers without code changes
+- ✅ Unified Linphone interface for any SIP provider
 
-### Single App Experience
+### Unified Interface
 
-Everything in Linphone:
-- ✅ SMS messaging (always available)
-- ✅ MMS messaging with photos (always available)
-- ✅ Voice calls (optional, your choice of provider)
+Single app for all communications:
+- ✅ SMS messaging
+- ✅ MMS messaging with photos
+- ✅ Voice calls (optional)
 
 ## Components
 
@@ -387,8 +374,10 @@ This is a personal project, but improvements welcome:
 ## Roadmap
 
 - [x] Basic SMS/MMS bridge
-- [x] VoIP.ms API proxy
+- [x] Message API proxy
 - [x] Full MMS support
+- [x] Docker registry caching
+- [x] WireGuard VPN automation
 - [ ] Message delivery reports
 - [ ] Message queueing/retry
 - [ ] Multi-device support
@@ -397,38 +386,34 @@ This is a personal project, but improvements welcome:
 
 ## FAQ
 
-**Q: Why not just use Android SMS Gateway?**  
-A: Android SMS Gateway doesn't support sending MMS. Fossify uses native Android APIs with full MMS support.
-
-**Q: Is this legal?**  
-A: Yes. You're using your own cellular plan, your own SIM card, and routing messages through your own infrastructure.
-
-**Q: What if my home internet goes down?**  
-A: Messages will fail until connectivity restored. Android phone needs internet for WireGuard VPN connection to VPS. Consider backup internet (LTE hotspot) or hosting phone somewhere with redundant internet.
+**Q: Why not use other SMS gateway solutions?**  
+A: Most SMS gateways don't support MMS sending. This system uses native Android MMS APIs for full multimedia support.
 
 **Q: Does the Android phone need a public IP?**  
-A: No! That's why we use WireGuard VPN. The phone connects out to the VPS, creating a private tunnel. The bridge can then reach the phone at 10.0.0.2 via the VPN.
+A: No. The WireGuard VPN creates a secure tunnel from the phone to the VPS, allowing the bridge to reach the phone via the private VPN network (10.0.0.2).
 
-**Q: Can I use this commercially?**  
-A: Technically yes, but verify carrier terms. Built for personal use.
+**Q: What if the Android phone's internet goes down?**  
+A: Messages will fail until connectivity is restored. The phone needs internet access to maintain the WireGuard VPN tunnel.
 
-**Q: Does this work with WhatsApp/Signal/etc?**  
-A: No, only SMS/MMS. Those apps require the phone itself to be active.
+**Q: Can I use this with WhatsApp/Signal/Telegram?**  
+A: No, only SMS/MMS. Those apps require the phone itself to be actively running their app.
 
-**Q: How reliable is this?**  
-A: Very reliable for SMS. MMS reliability depends on carrier settings and network quality. Voice calls via VoIP.ms are production-grade.
+**Q: How reliable is this system?**  
+A: Very reliable for SMS. MMS reliability depends on carrier settings and network quality. Voice calls depend on your chosen SIP provider.
+
+**Q: Can I switch SIP/VoIP providers?**  
+A: Yes. The SMS/MMS bridge is provider-agnostic. You can use any SIP provider or none at all (SMS/MMS only mode).
 
 ## Next Steps
 
-1. **Start with:** [docs/QUICKSTART.md](docs/QUICKSTART.md) - Run `./scripts/complete-setup.sh`
+1. **Start with:** [docs/QUICKSTART.md](docs/QUICKSTART.md)
 2. **Build Fossify:** [fossify-api/README.md](fossify-api/README.md)
-3. **Deploy bridge:** `cd bridge-server && docker-compose up`
-4. **Test thoroughly:** Before relying on it for travel
-5. **Monitor:** Setup alerts and logging
+3. **Deploy bridge:** `cd bridge-server && ../scripts/install-bridge.sh`
+4. **Configure:** Set up WireGuard and test endpoints
 
 ---
 
-**Status:** Production-ready for personal use
+**Status:** Production-ready
 
 **Last Updated:** January 2026
 
