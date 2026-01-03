@@ -156,6 +156,7 @@ sms-bridge-linphone/
 - **VPS/Server** with public IP and domain (2GB RAM minimum)
 - **Docker & docker-compose**
 - **WireGuard** (automated setup included)
+- **adb** (Android Debug Bridge, for installing APK)
 - *Optional:* **SIP/VoIP provider** that supports bring-your-own-DID (for seamless number forwarding and voice calls)
 
 ### Remote Setup (Recommended)
@@ -190,13 +191,25 @@ cd sms-bridge-linphone/scripts
 ./complete-setup.sh
 ```
 
-**Phase 1: Build Fossify**
+**Phase 1: Install Fossify Messages APK with API**
+
+**Option A: Pre-built APK (Recommended)**
 ```bash
-# See fossify-api/README.md
-# - Fork Fossify Messages
-# - Add HTTP API code (provided)
-# - Build and install APK on Android
-# - Configure API settings in app
+# Download from GitHub Actions
+# https://github.com/awilmoth/Messages/actions
+
+# Latest successful build → download fossify-api-debug artifact
+# Install on Android:
+adb install app-debug.apk
+```
+
+**Option B: Build from Source**
+```bash
+# See fossify-api/README.md for details
+# - Fork Fossify Messages: https://github.com/FossifyOrg/Messages
+# - Add HTTP API code (provided in fossify-api/)
+# - Build: ./gradlew assembleDebug
+# - Install: adb install app/build/outputs/apk/foss/debug/app-debug.apk
 ```
 
 **Phase 2: Deploy Bridge + mmsgate**
