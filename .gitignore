@@ -43,6 +43,16 @@ ENV/
 .env.*.local
 .env.production.local
 
+# Deployment notes with secrets (keep template, ignore actual)
+DEPLOYMENT.md
+DEPLOYMENT.local.md
+
+# Generated deployment files (unique per installation)
+android-wireguard.conf
+android-wireguard-qr.png
+scripts/android-wireguard.conf
+scripts/android-wireguard-qr.png
+
 # Logs
 *.log
 logs/
