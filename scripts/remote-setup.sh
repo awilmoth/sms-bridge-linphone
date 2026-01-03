@@ -314,9 +314,45 @@ SMTP_TO=
 echo "Sending configuration to VPS..."
 echo "$ENV_CONTENT" | ssh_cmd 'cat > /tmp/.env.tmp && cd sms-bridge-linphone/bridge-server && ([ ! -f .env ] && mv /tmp/.env.tmp .env || rm /tmp/.env.tmp)'
 
-# Start bridge server
+# Build and push mmsgate image to local registry
+echo "Building mmsgate image (this may take a few minutes)..."
+ssh_cmd '
+cd sms-bridge-linphone
+
+# First, ensure registry is running
+cd bridge-server
+docker-compose up -d registry
+sleep 5
+
+# Wait for registry to be ready
+for i in {1..10}; do
+  if docker exec local-registry curl -f http://localhost:5000/v2/ > /dev/null 2>&1; then
+    echo "✓ Registry ready"
+    break
+  fi
+  echo "Waiting for registry..."
+  sleep 2
+done
+
+# Go to root and build mmsgate
+cd ..
+if [ ! -d mmsgate ]; then
+    echo "Cloning mmsgate repository..."
+    git clone --recursive https://github.com/RVgo4it/mmsgate
+fi
+
+echo "Building mmsgate image..."
+cd mmsgate
+docker build --network=host -t localhost:5001/mmsgate:latest .
+echo "Pushing mmsgate to registry..."
+docker push localhost:5001/mmsgate:latest
+
+echo "✓ mmsgate image built and pushed"
+'
+
+# Start all bridge services
 echo "Starting bridge server..."
-ssh_cmd 'cd sms-bridge-linphone/bridge-server && docker-compose up -d --build 2>&1 | head -20'
+ssh_cmd 'cd sms-bridge-linphone/bridge-server && docker-compose up -d --build 2>&1 | tail -10'
 
 # Step 7: Test
 echo
