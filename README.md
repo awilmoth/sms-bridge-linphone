@@ -156,31 +156,30 @@ cd bridge-server/
 # - Starts all services
 ```
 
-**Phase 3: Configure mmsgate** *(SMS/MMS works without this step)*
+**Phase 3: Configure mmsgate** *(optional - only needed for voice calls)*
 ```bash
 cd bridge-server/
 
-# SMS/MMS works immediately with placeholder credentials
-# For voice calls, add your VoIP provider credentials:
-nano mmsgate.conf  # Update username/password with your provider account
-nano flexisip.conf # Update domain settings if needed
+# Placeholder credentials in mmsgate.conf work fine for SMS/MMS
+# Bridge proxies API calls, so real VoIP provider account not needed
+# Only update mmsgate.conf if you want voice calls with a VoIP provider:
 
-docker-compose restart mmsgate
+# nano mmsgate.conf  # Add real VoIP provider credentials (optional)
+# docker-compose restart mmsgate
 ```
 
-**Phase 4: Setup Linphone** *(optional for voice calls)*
+**Phase 4: Setup Linphone** *(required for SMS/MMS)*
 ```bash
-# SMS/MMS works immediately without any of this!
-# This step is only needed if you want voice calls.
-
+# Linphone is needed to receive messages (mmsgate delivers via SIP)
 # Install Linphone app: linphone.org (iOS, Android, Desktop)
-# Add SIP account:
-#   Username: your-sip-username
-#   Password: your-sip-password
-#   Domain: sip.your-domain.com
+# Add SIP account to the bridge (not a VoIP provider):
+#   Username: your-sip-username (you choose this)
+#   Password: your-sip-password (you choose this)
+#   Domain: sip.your-domain.com (your bridge domain)
 #   Transport: TLS
-# Test SMS/MMS by sending a message (works immediately)
-# (Optional) Configure call forwarding for voice calls
+
+# Test SMS/MMS - send a message and receive replies!
+# (Optional) For voice calls: add VoIP provider credentials in mmsgate.conf
 ```
 
 ### Technology Stack

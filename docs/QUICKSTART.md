@@ -167,22 +167,24 @@ docker-compose logs -f
 
 ## Phase 3: Configure mmsgate
 
-**Why:** Optional - SMS/MMS works immediately with placeholder credentials. Only needed if you want voice calls.
+**Why:** Optional - only needed if you want voice calls. SMS/MMS work with placeholder credentials because the bridge proxies API calls.
 
-### Edit mmsgate.conf (Optional for Voice Calls)
+### mmsgate Configuration (Optional for Voice Calls)
 
 ```bash
 cd bridge-server/
+```
+
+**For SMS/MMS only:** No changes needed - placeholder values in [../configs/mmsgate.conf.example](../configs/mmsgate.conf.example) work fine.
+
+**For voice calls (optional):** Update mmsgate.conf with your VoIP provider credentials:
+
+```bash
 nano mmsgate.conf
 ```
 
-**For SMS/MMS only:** Use placeholder values from [../configs/mmsgate.conf.example](../configs/mmsgate.conf.example)
-
-**For voice calls:** Update with your actual VoIP provider credentials:
-
 ```ini
 [voipms]
-# CRITICAL: Point to bridge, not real VoIP.ms!
 api_url = https://bridge.your-domain.com:5000/voipms/api
 username = your_email@example.com        # Your VoIP provider account
 password = your_password                  # Your VoIP provider password
@@ -195,14 +197,9 @@ cert_file = /etc/mmsgate/certs/fullchain.pem
 key_file = /etc/mmsgate/certs/privkey.pem
 ```
 
-### Restart mmsgate (Only if you edited the config)
-
+Then restart:
 ```bash
-cd bridge-server/
 docker-compose restart mmsgate
-
-# Check logs
-docker-compose logs -f mmsgate
 ```
 
 ### Configure VoIP Provider Webhook (Only for Voice Calls)
@@ -218,13 +215,13 @@ If using voice calls with VoIP.ms:
    - Method: POST
 4. Save
 
-**✓ Checkpoint:** SMS/MMS works! (Optional: VoIP.ms webhook configured for voice)
+**✓ Checkpoint:** mmsgate configured (placeholder creds work for SMS/MMS)
 
-## Phase 4: Setup Linphone (Optional for Voice Calls)
+**✓ Checkpoint:** mmsgate configured (placeholder creds work for SMS/MMS)
 
-**Why:** SIP client for voice calls. SMS/MMS work without this step.
+## Phase 4: Setup Linphone (Required for SMS/MMS)
 
-**Important:** SMS/MMS functionality is now complete! You can test messages without setting up Linphone.
+**Why:** Linphone is the SIP client that receives messages from mmsgate. Voice calls are optional.
 
 ### Install Linphone
 
@@ -232,7 +229,7 @@ If using voice calls with VoIP.ms:
 - Android: Play Store  
 - Desktop: https://linphone.org
 
-### Configure SIP Account
+### Configure SIP Account (Required for SMS/MMS)
 
 1. Open Linphone
 2. Add SIP account:
@@ -244,24 +241,27 @@ If using voice calls with VoIP.ms:
 
 3. Should show "Registered" or green checkmark
 
-### Test SMS/MMS
+### Test SMS/MMS (Works Now!)
 
-Send a text message in Linphone - it works immediately without any additional setup!
+Send a text message in Linphone - SMS/MMS work immediately!
+
+Messages flow:
+- **Send:** Linphone → mmsgate → bridge → Fossify → cellular
+- **Receive:** Cellular → Fossify → bridge → mmsgate → Linphone
 
 ### (Optional) Enable Voice Calls
 
-If using voice calls with a VoIP provider:
+To add voice calling capability:
 
-1. Configure your VoIP provider to forward calls to your SIP address
-2. Example with VoIP.ms:
+1. Add VoIP provider credentials to mmsgate.conf (Phase 3)
+2. Configure your VoIP provider to forward calls to your SIP address
+3. Example with VoIP.ms:
    - Dial `*72` + your VoIP DID to enable forwarding
-   - Now calls to your cellular number ring in Linphone
+   - Calls to your cellular number now ring in Linphone
 
-Done! You now have SMS/MMS + voice in one app.
+You're done! SMS/MMS + optional voice in one app.
 
-````
-
-**✓ Checkpoint:** Linphone registered, calls forwarded
+**✓ Checkpoint:** SMS/MMS working in Linphone!
 
 ## End-to-End Testing
 
