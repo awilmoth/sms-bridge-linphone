@@ -37,7 +37,25 @@ This will:
 3. Create server config (VPS = 10.0.0.1)
 4. Create client config (Android = 10.0.0.2)
 5. Show QR code for Android
-6. Setup bridge server
+6. Configure UFW firewall (blocks all except SSH, WireGuard, VoIP)
+7. Setup bridge server
+
+### Firewall Configuration
+
+The setup script automatically configures UFW (Uncomplicated Firewall) to:
+- **Block all incoming traffic** by default
+- **Allow SSH (port 22)** for administration
+- **Allow WireGuard (port 51820 UDP)** for VPN tunnel
+- **Allow VoIP ports (443, 5060, 5061, 10000-20000 UDP)** for Linphone/SIP
+
+If you want to configure the firewall manually:
+
+```bash
+cd scripts/
+./setup-firewall.sh
+```
+
+This script shows all firewall rules and provides detailed port documentation.
 
 ### Install on Android
 

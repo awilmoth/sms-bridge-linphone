@@ -424,6 +424,26 @@ Public Internet                      Private VPN
 └─ VoIP.ms (external service)
 ```
 
+### Firewall Configuration (UFW)
+
+**Automated Setup:** `./scripts/setup-firewall.sh`
+
+**Default Policy:** BLOCK all incoming traffic
+
+**Allowed Inbound Ports:**
+
+| Port        | Protocol | Purpose                               | Direction |
+| ----------- | -------- | ------------------------------------- | --------- |
+| 22          | TCP      | SSH administration                    | Incoming  |
+| 443         | TCP      | HTTPS (SIP TLS, Bridge API)           | Incoming  |
+| 5060        | TCP/UDP  | SIP signaling (VoIP provider)         | Incoming  |
+| 5061        | TCP      | SIP TLS (Linphone ↔ Flexisip)         | Incoming  |
+| 10000-20000 | UDP      | RTP (voice streams)                   | Incoming  |
+| 51820       | UDP      | WireGuard VPN                         | Incoming  |
+| All         | TCP/UDP  | Outgoing traffic (allowed by default) | Outgoing  |
+
+**Important:** Make sure SSH key-based authentication is working BEFORE enabling UFW, or you may lock yourself out. If locked out, use SSH keys to reconnect and run `sudo ufw disable`.
+
 ### What's NOT Exposed
 
 - Fossify API (WireGuard VPN only, 10.0.0.2)
@@ -431,13 +451,17 @@ Public Internet                      Private VPN
 - WireGuard keys (only on VPS and Android)
 - Bridge secrets (stored in .env, not in code)
 - Message content (encrypted in transit)
+- Docker internal ports (blocked by firewall)
 
 ### What IS Public
 
 - VPS IP address (your domain)
 - SIP ports (443, 5061) for Linphone connectivity
-- Bridge port 5000 (HTTPS with authentication)
-- VoIP.ms DID (part of your phone setup)
+- SIP ports (5060) for VoIP provider
+- RTP ports (10000-20000) for voice streaming
+- WireGuard (51820) for VPN tunnel
+- VoIP provider DID (part of your phone setup)
+- **All other ports:** Blocked by UFW firewall
 
 ### Credential Architecture (Critical)
 
@@ -515,12 +539,12 @@ Voice Calls Scenario (With VoIP Provider):
 
 **Configuration Summary:**
 
-| Component | Credential Type | Source | Config File | Purpose |
-|-----------|-----------------|--------|-------------|---------|
-| Linphone | Bridge SIP account | You create | flexisip.conf | Register as SIP client |
-| mmsgate | VoIP provider (optional) | Your provider | mmsgate.conf | Route to provider network |
-| Bridge API | Bearer token | Generated | .env | Authenticate Fossify/mmsgate |
-| Flexisip | Bridge user database | Auto-generated | bridge-users.db | User authentication |
+| Component  | Credential Type          | Source         | Config File     | Purpose                      |
+| ---------- | ------------------------ | -------------- | --------------- | ---------------------------- |
+| Linphone   | Bridge SIP account       | You create     | flexisip.conf   | Register as SIP client       |
+| mmsgate    | VoIP provider (optional) | Your provider  | mmsgate.conf    | Route to provider network    |
+| Bridge API | Bearer token             | Generated      | .env            | Authenticate Fossify/mmsgate |
+| Flexisip   | Bridge user database     | Auto-generated | bridge-users.db | User authentication          |
 
 ---
 

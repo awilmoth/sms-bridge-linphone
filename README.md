@@ -314,13 +314,27 @@ Single app for all communications:
 - **WireGuard VPN:** Encrypted tunnel for Fossify API access (10.0.0.0/24)
 - **All internal Docker communication:** Private Docker network (sms-net)
 
-### Network Exposure
+### Network Exposure & Firewall
 
-- **Fossify:** Not exposed (WireGuard VPN only, 10.0.0.2)
-- **WireGuard:** UDP port 51820 (encrypted VPN tunnel)
-- **Bridge:** HTTPS with authentication
-- **mmsgate:** HTTPS with authentication
-- **Flexisip:** TLS SIP only
+**UFW Configuration (Automated)**
+
+The setup automatically configures UFW to block all incoming traffic except:
+- **SSH (22/tcp)** — Administration access
+- **WireGuard (51820/udp)** — VPN tunnel to Android
+- **SIP/VoIP (443, 5060, 5061, 10000-20000/udp)** — Voice/messaging
+- **All outgoing traffic** — Allowed by default
+
+To manually configure the firewall:
+```bash
+./scripts/setup-firewall.sh
+```
+
+**What's Exposed**
+- Fossify: Not exposed (WireGuard VPN only, 10.0.0.2)
+- WireGuard: UDP port 51820 (encrypted VPN tunnel)
+- Bridge: HTTPS with authentication (via Linphone)
+- mmsgate: HTTPS with authentication (internal)
+- Flexisip: TLS SIP only (port 5061)
 
 ## Features
 

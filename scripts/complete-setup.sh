@@ -94,10 +94,45 @@ echo "Starting WireGuard..."
 sudo systemctl enable wg-quick@wg0 > /dev/null 2>&1
 sudo systemctl start wg-quick@wg0
 
-# Configure firewall
+# Configure firewall (UFW)
+echo
+echo "Configuring UFW firewall..."
 if command -v ufw &> /dev/null; then
+    # Enable UFW with default deny policy
+    sudo ufw --force enable > /dev/null 2>&1
+    
+    # Default deny all incoming
+    sudo ufw default deny incoming > /dev/null 2>&1
+    sudo ufw default allow outgoing > /dev/null 2>&1
+    
+    # Allow SSH (port 22)
+    sudo ufw allow 22/tcp > /dev/null 2>&1
+    
+    # Allow WireGuard (port 51820 UDP)
     sudo ufw allow 51820/udp > /dev/null 2>&1
-    echo "✓ Firewall configured"
+    
+    # Allow SIP/VoIP traffic
+    # - Port 5061: SIP TLS (Linphone ↔ Flexisip)
+    # - Port 5060: SIP TCP/UDP (VoIP provider)
+    # - Port 443: HTTPS (bridge API, also used by SIP over TLS)
+    # - Port 5000: Bridge API (only reachable via WireGuard, but open for safety)
+    sudo ufw allow 443/tcp > /dev/null 2>&1
+    sudo ufw allow 5060/tcp > /dev/null 2>&1
+    sudo ufw allow 5060/udp > /dev/null 2>&1
+    sudo ufw allow 5061/tcp > /dev/null 2>&1
+    
+    # RTP for voice (typically 16384-32767, open range for simplicity)
+    # In production, restrict this range more tightly
+    sudo ufw allow 10000:20000/udp > /dev/null 2>&1
+    
+    echo "✓ UFW firewall configured:"
+    echo "  - Default: DENY all incoming"
+    echo "  - SSH: port 22/tcp"
+    echo "  - WireGuard: port 51820/udp"
+    echo "  - SIP/VoIP: ports 443, 5060, 5061, 10000:20000/udp"
+else
+    echo "⚠️  UFW not available, skipping firewall configuration"
+    echo "   Install with: sudo apt install ufw"
 fi
 
 # Step 4: Generate Android Config
