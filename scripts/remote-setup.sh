@@ -345,15 +345,32 @@ echo "Building mmsgate layers..."
 
 # Build flexisip layer (this takes ~5 minutes)
 echo "Building Flexisip layer..."
-docker build -t flexisip -f mmsgate/Dockerfile_flexisip_install --build-arg="BRANCH=release/2.3" . > /dev/null 2>&1 && echo "✓ Flexisip layer built" || echo "✗ Flexisip build failed"
+echo "(Compiling from source - this may take 5-10 minutes...)"
+if docker build -t flexisip -f mmsgate/Dockerfile_flexisip_install --build-arg="BRANCH=release/2.3" . 2>&1 | tail -20; then
+  echo "✓ Flexisip layer built"
+else
+  echo "✗ Flexisip build failed"
+fi
 
+echo ""
 # Build PJSIP layer (this takes ~5 minutes)
 echo "Building PJSIP layer..."
-docker build -t pjsip -f mmsgate/Dockerfile_pjsip_install --build-arg="BRANCH=support-2.14.1" . > /dev/null 2>&1 && echo "✓ PJSIP layer built" || echo "✗ PJSIP build failed"
+echo "(Compiling from source - this may take 5-10 minutes...)"
+if docker build -t pjsip -f mmsgate/Dockerfile_pjsip_install --build-arg="BRANCH=support-2.14.1" . 2>&1 | tail -20; then
+  echo "✓ PJSIP layer built"
+else
+  echo "✗ PJSIP build failed"
+fi
 
+echo ""
 # Build final mmsgate layer (this takes ~5 minutes)
 echo "Building mmsgate layer..."
-docker build -t mmsgate -f mmsgate/Dockerfile_mmsgate_install . > /dev/null 2>&1 && echo "✓ mmsgate layer built" || echo "✗ mmsgate build failed"
+echo "(Final layer - this may take 5-10 minutes...)"
+if docker build -t mmsgate -f mmsgate/Dockerfile_mmsgate_install . 2>&1 | tail -20; then
+  echo "✓ mmsgate layer built"
+else
+  echo "✗ mmsgate build failed"
+fi
 
 # Tag and push to local registry
 echo "Pushing mmsgate to registry..."
@@ -365,7 +382,7 @@ echo "✓ mmsgate image built and pushed"
 # Monitor and wait for build completion, then auto-start containers
 echo ""
 echo "Monitoring build completion and starting services..."
-MAX_WAIT=600  # 10 minutes max wait for safety
+MAX_WAIT=900  # 15 minutes max wait
 ELAPSED=0
 while [ $ELAPSED -lt $MAX_WAIT ]; do
   if docker image ls | grep -q "^mmsgate "; then
@@ -391,8 +408,12 @@ while [ $ELAPSED -lt $MAX_WAIT ]; do
     break
   fi
   
-  # Show build progress
-  echo "Still building mmsgate layers... ($(($ELAPSED / 10)) min)"
+  # Show progress more frequently and include current sizes
+  MINS=$((ELAPSED / 60))
+  SECS=$((ELAPSED % 60))
+  DOCKER_SIZE=$(du -sh /var/lib/docker 2>/dev/null | cut -f1)
+  IMAGES=$(docker image ls | grep -E "^(flexisip|pjsip|mmsgate)" | wc -l)
+  echo "[$MINS:$(printf "%02d" $SECS)] Building... [$IMAGES/3 layers built] [Docker: $DOCKER_SIZE]"
   sleep 10
   ELAPSED=$(($ELAPSED + 10))
 done
