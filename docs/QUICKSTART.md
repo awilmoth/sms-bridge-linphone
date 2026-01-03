@@ -222,41 +222,44 @@ If using voice calls with VoIP.ms:
 
 ## Phase 4: Setup Linphone (Optional for Voice Calls)
 
-**Why:** Your SIP client - handles both calls and messages. SMS/MMS work without this step.
+**Why:** SIP client for voice calls. SMS/MMS work without this step.
+
+**Important:** SMS/MMS functionality is now complete! You can test messages without setting up Linphone.
 
 ### Install Linphone
 
 - iOS: App Store
 - Android: Play Store  
-- Desktop: linphone.org
+- Desktop: https://linphone.org
 
-### Configure Account
+### Configure SIP Account
 
 1. Open Linphone
-2. "Use SIP account"
-3. Username: `your_voipms_username`
-4. Password: `your_voipms_password`
-5. Domain: `seattle.voip.ms` (or your server)
-6. Transport: **TLS**
-7. Save
+2. Add SIP account:
+   - **Username:** `your-sip-username` (you choose this)
+   - **Password:** `your-sip-password` (you choose this)
+   - **Domain:** `sip.your-domain.com` (your bridge domain)
+   - **Transport:** TLS
+   - **Save**
 
-### Verify Registration
+3. Should show "Registered" or green checkmark
 
-Should show "Registered" or green checkmark.
+### Test SMS/MMS
 
-### Enable Call Forwarding
+Send a text message in Linphone - it works immediately without any additional setup!
 
-On Android phone (Fossify):
+### (Optional) Enable Voice Calls
 
-```
-Dial: *72 + your_voipms_did
+If using voice calls with a VoIP provider:
 
-Example: *725551234567
+1. Configure your VoIP provider to forward calls to your SIP address
+2. Example with VoIP.ms:
+   - Dial `*72` + your VoIP DID to enable forwarding
+   - Now calls to your cellular number ring in Linphone
 
-To disable: *73
-```
+Done! You now have SMS/MMS + voice in one app.
 
-Now calls to your cellular number ring in Linphone!
+````
 
 **✓ Checkpoint:** Linphone registered, calls forwarded
 

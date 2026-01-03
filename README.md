@@ -1,7 +1,5 @@
 # SMS/MMS Bridge with Linphone
 
-**Route SMS/MMS from an Android phone with cellular service through a bridge server to Linphone**
-
 ## Project Overview
 
 This system creates a secure bridge between an Android phone with a SIM card (the messaging device) and a Linphone client (the messaging app). SMS/MMS messages route through a bridge server on a VPS, allowing you to send and receive SMS/MMS from Linphone using your actual cellular number.
@@ -172,10 +170,17 @@ docker-compose restart mmsgate
 
 **Phase 4: Setup Linphone** *(optional for voice calls)*
 ```bash
-# Install Linphone app on your device
-# Add SIP account with your provider's credentials
-# Configure cellular number forwarding (if using voice calls)
-# Test SMS/MMS (works without SIP account)
+# SMS/MMS works immediately without any of this!
+# This step is only needed if you want voice calls.
+
+# Install Linphone app: linphone.org (iOS, Android, Desktop)
+# Add SIP account:
+#   Username: your-sip-username
+#   Password: your-sip-password
+#   Domain: sip.your-domain.com
+#   Transport: TLS
+# Test SMS/MMS by sending a message (works immediately)
+# (Optional) Configure call forwarding for voice calls
 ```
 
 ### Technology Stack
