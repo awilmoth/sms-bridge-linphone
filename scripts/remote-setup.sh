@@ -57,21 +57,22 @@ if [ "$AUTH_METHOD" = "2" ]; then
     }
 else
     # Use SSH keys
-    if [ ! -f ~/.ssh/id_ed25519 ]; then
-        echo "Error: SSH private key not found at ~/.ssh/id_ed25519"
+    SSH_KEY="$HOME/.ssh/id_ed25519"
+    if [ ! -f "$SSH_KEY" ]; then
+        echo "Error: SSH private key not found at $SSH_KEY"
         echo "Generate one with: ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519"
         exit 1
     fi
     
-    echo "Using SSH key: ~/.ssh/id_ed25519"
+    echo "Using SSH key: $SSH_KEY"
     
     # Create SSH command function with keys
     ssh_cmd() {
-        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 "$VPS_USER@$VPS_HOST" "$@"
+        ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" "$VPS_USER@$VPS_HOST" "$@"
     }
     
     scp_cmd() {
-        scp -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 "$@"
+        scp -o StrictHostKeyChecking=no -i "$SSH_KEY" "$@"
     }
 fi
 
@@ -346,7 +347,7 @@ echo "  - android-wireguard.conf (config file)"
 echo "  - android-wireguard-qr.png (QR code image)"
 echo
 echo "Useful remote commands:"
-echo "  - SSH: ssh -i ~/.ssh/id_ed25519 $VPS_USER@$VPS_HOST"
+echo "  - SSH: ssh -i \$HOME/.ssh/id_ed25519 $VPS_USER@$VPS_HOST"
 echo "  - Bridge logs: ssh $VPS_USER@$VPS_HOST 'cd bridge-server && docker-compose logs -f'"
 echo "  - Bridge down: ssh $VPS_USER@$VPS_HOST 'cd bridge-server && docker-compose down'"
 echo "  - Check VPN: ssh $VPS_USER@$VPS_HOST 'sudo wg show'"
